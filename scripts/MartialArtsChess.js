@@ -93,22 +93,20 @@ class MartialArtsChess extends Game {
         this.bSerialToSquareMap = {};
         for (let i = 0; i <= 4; i++) {
             this.aSerialToSquareMap[`b${i}`] = [i, 4];
-            this.squareToSerialMap[`${i},4`] = `a${i}`;
+            this.squareToSerialMap[`${i},4`] = `b${i}`;
         }
         if (!relativeMoves) throw new Error("You must pass a list of relative moves to the constructor.");
         if (relativeMoves.length !== 5) {
             throw new Error(`Called reset with ${relativeMoves.length} moves, but expected 5.`);
         }
-        console.log("Should have errored");
         this.serialToRelativeMoveMap = {};
         for (let i = 0; i <= 4; i++) {
             if (relativeMoves[i].length !== 2) throw new Error(`Relative move ${i} given to reset was ${relativeMoves[i]} but this does not have a length of two.`);
             this.serialToRelativeMoveMap[`m${i}`] = relativeMoves[i];
         }
-        console.debug("Ran ok");
         this.aMoves = ["m0", "m1"];
         this.bMoves = ["m2", "m3"];
-        this.cMoves = "m4";
+        this.cMove = "m4";
     }
 
     /**
