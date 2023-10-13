@@ -199,10 +199,6 @@ class TicTacToe extends Game {
     getEstimatedWinningProbability(playerIndex) {
         return 0.5;
     }
-
-    cleanup() {
-
-    }
 }
 
 module.exports = TicTacToe;

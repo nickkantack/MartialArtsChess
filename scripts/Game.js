@@ -60,13 +60,6 @@ class Game {
     }
 
     /**
-     * @returns an equivalent copy of the game instance on which this method is called
-     */
-    copy() {
-        Game.baseClassWarn();
-    }
-
-    /**
      * @returns the winning player index, or, {@link Game.NO_WINNER_PLAYER_INDEX} if stalemate or the game is ongoing
      */
     getWinningPlayerIndex() {
@@ -88,13 +81,6 @@ class Game {
      */
     setTreeSearchMaxDepth(depth) {
         this.treeSearchMaxDepth = depth;
-    }
-
-    /**
-     * Method to be called after doing a tree search. Good for things like updating caches
-     */
-    cleanup() {
-        Game.baseClassWarn();
     }
 
     getBestNMoves(n) {
@@ -150,15 +136,7 @@ class Game {
         listToReturn.sort(function(a, b) {
             return a.prob === b.prob ? 0 : a.prob > b.prob;
         });
-
-        // Make a list that has just the moves
-        bestMoves = [];
-        for (let i = 0; i < n; i++) {
-            let listLine = listToReturn[i];
-            bestMoves[i] = [listLine.move, listLine.prob];
-        }
-        this.cleanup();
-        return bestMoves;
+        return listToReturn;
     }
 
     /**
@@ -188,7 +166,6 @@ class Game {
             }
             this.unmakeMove(move);
         }
-        this.cleanup();
         return [bestMove, winProbability];
     }
 
