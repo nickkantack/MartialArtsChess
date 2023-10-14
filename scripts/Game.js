@@ -188,6 +188,9 @@ class Game {
             let probabilityOfWinning = 0;
             let winningPlayerIndex = this.getWinningPlayerIndex();
             if (winningPlayerIndex === Game.NO_WINNER_PLAYER_INDEX) {
+                // TODO do an error log if the game is over but winningPlayerIndex === Game.NO_WINNER_PLAYER_INDEX, or at 
+                // least a warning log. It's possible the game can end with no winner, but this possibility is 
+                // potentially lost on the value stored in probabilityOfWinning.
                 probabilityOfWinning = this.getEstimatedWinningProbability(playerIndex);
             }
             if (winningPlayerIndex === playerIndex) {
@@ -208,6 +211,8 @@ class Game {
                 let move = possibleMoves[i];
                 // If making this move will land at the max depth, then do a "light" makeMove that skips calculating legal
                 // subsequent moves.
+                // TODO consider removing the second argument for this.makeMove since the "light" version
+                // was something specific to the approach taken with Hive.
                 this.makeMove(move, depth === maxDepth - 1);
                 let candidateWinningProbability = this.getWinProbabilityKernel(playerIndex, depth + 1, maxDepth, winningProbability);
                 if (winningProbability === -1 || isAPreferredToB(candidateWinningProbability, winningProbability)) {

@@ -124,27 +124,16 @@ class MartialArtsChess extends Game {
         let playerSerialToSquareMap = this.playerTurnIndex ? this.bSerialToSquareMap : this.aSerialToSquareMap;
         let reflectionMultiplier = playerLetter === "b" ? -1 : 1; // Handle 180 degree rotation between player perspectives
         let playerMoves = this.playerTurnIndex ? this.bMoves : this.aMoves;
-        console.log(`playerMoves is ${playerMoves}`);
         let movesToReturn = [];
-        console.log(`Will contemplate moves for these pieces: ${Object.keys(playerSerialToSquareMap)}`);
         for (let pieceSerial of Object.keys(playerSerialToSquareMap)) {
             const originatingSquare = playerSerialToSquareMap[pieceSerial];
             for (let move of playerMoves) {
-                console.log(`Contemplating move ${move} which has these relative moves: ${this.serialToRelativeMoveMap[move]}`);
                 for (let relativeMove of this.serialToRelativeMoveMap[move]) {
                     const destinationSquare = [originatingSquare[0] + reflectionMultiplier * relativeMove[0], originatingSquare[1] + reflectionMultiplier * relativeMove[1]];
                     // If the destination square is out of bounds, skip this relative move
                     if (destinationSquare[0] < 0 || destinationSquare[0] > 4 || destinationSquare[1] < -1 || destinationSquare[1] > 4) continue;
                     const destinationSquareAsString = `${destinationSquare[0]},${destinationSquare[1]}`;
                     // If a friendly piece is at the destination square, skip this move
-                    if (this.squareToSerialMap[destinationSquareAsString]) {
-                        console.log(`I have piece ${pieceSerial} trying to move to ${destinationSquare} but there is a piece there, ${this.squareToSerialMap[destinationSquareAsString]}`);
-                        if (new RegExp(`${playerLetter}[0-4]{1}`).test(this.squareToSerialMap[destinationSquareAsString])) {
-                            console.log("This is not allowed since they are the same team");
-                        } else {
-                            console.log("This is allowed becuase they are of other teams");
-                        }
-                    }
                     if (this.squareToSerialMap[destinationSquareAsString] && new RegExp(`${playerLetter}[0-4]{1}`).test(this.squareToSerialMap[destinationSquareAsString])) continue;
                     const capturedPiece = this.squareToSerialMap[destinationSquareAsString] || null;
                     const turn = [pieceSerial, relativeMove, capturedPiece];
