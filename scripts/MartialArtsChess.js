@@ -92,7 +92,7 @@ class MartialArtsChess extends Game {
         }
         this.bSerialToSquareMap = {};
         for (let i = 0; i <= 4; i++) {
-            this.aSerialToSquareMap[`b${i}`] = [i, 4];
+            this.bSerialToSquareMap[`b${i}`] = [i, 4];
             this.squareToSerialMap[`${i},4`] = `b${i}`;
         }
         if (!relativeMoves) throw new Error("You must pass a list of relative moves to the constructor.");
@@ -101,38 +101,79 @@ class MartialArtsChess extends Game {
         }
         this.serialToRelativeMoveMap = {};
         for (let i = 0; i <= 4; i++) {
-            if (relativeMoves[i].length !== 2) throw new Error(`Relative move ${i} given to reset was ${relativeMoves[i]} but this does not have a length of two.`);
+            for (let j = 0; j < relativeMoves[i].length; j++) {
+                if (relativeMoves[i][j].length !== 2) throw new Error(`Relative move ${i} given to reset was ${relativeMoves[i][j]} but this does not have a length of two, it has a length if ${relativeMoves[i][j].length}`);
+
+            }
             this.serialToRelativeMoveMap[`m${i}`] = relativeMoves[i];
         }
         this.aMoves = ["m0", "m1"];
         this.bMoves = ["m2", "m3"];
         this.cMove = "m4";
+        this.playerTurnIndex = 0; // 0 corresponds to player "a", whereas 1 corresponds to player "b"
     }
 
     /**
      * Consider caching possible moves in the derived class if calculating possible moves is computationally expensive.
-     * Also, it is critically important that this method return an empty list when the game is over.
+     * Also, if this returns an empty list, the game will be presumed over.
      *
      * @returns a list of moves which are valid arguments for {@link makeMove}
      */
     getMoves() {
-        
+        let playerLetter = this.playerTurnIndex ? "b" : "a";
+        let playerSerialToSquareMap = this.playerTurnIndex ? this.bSerialToSquareMap : this.aSerialToSquareMap;
+        let reflectionMultiplier = playerLetter === "b" ? -1 : 1; // Handle 180 degree rotation between player perspectives
+        let playerMoves = this.playerTurnIndex ? this.bMoves : this.aMoves;
+        console.log(`playerMoves is ${playerMoves}`);
+        let movesToReturn = [];
+        console.log(`Will contemplate moves for these pieces: ${Object.keys(playerSerialToSquareMap)}`);
+        for (let pieceSerial of Object.keys(playerSerialToSquareMap)) {
+            const originatingSquare = playerSerialToSquareMap[pieceSerial];
+            for (let move of playerMoves) {
+                console.log(`Contemplating move ${move} which has these relative moves: ${this.serialToRelativeMoveMap[move]}`);
+                for (let relativeMove of this.serialToRelativeMoveMap[move]) {
+                    const destinationSquare = [originatingSquare[0] + reflectionMultiplier * relativeMove[0], originatingSquare[1] + reflectionMultiplier * relativeMove[1]];
+                    // If the destination square is out of bounds, skip this relative move
+                    if (destinationSquare[0] < 0 || destinationSquare[0] > 4 || destinationSquare[1] < -1 || destinationSquare[1] > 4) continue;
+                    const destinationSquareAsString = `${destinationSquare[0]},${destinationSquare[1]}`;
+                    // If a friendly piece is at the destination square, skip this move
+                    if (this.squareToSerialMap[destinationSquareAsString]) {
+                        console.log(`I have piece ${pieceSerial} trying to move to ${destinationSquare} but there is a piece there, ${this.squareToSerialMap[destinationSquareAsString]}`);
+                        if (new RegExp(`${playerLetter}[0-4]{1}`).test(this.squareToSerialMap[destinationSquareAsString])) {
+                            console.log("This is not allowed since they are the same team");
+                        } else {
+                            console.log("This is allowed becuase they are of other teams");
+                        }
+                    }
+                    if (this.squareToSerialMap[destinationSquareAsString] && new RegExp(`${playerLetter}[0-4]{1}`).test(this.squareToSerialMap[destinationSquareAsString])) continue;
+                    const capturedPiece = this.squareToSerialMap[destinationSquareAsString] || null;
+                    const turn = [pieceSerial, relativeMove, capturedPiece];
+                    movesToReturn.push(turn);
+                }
+            }
+        }
+        return movesToReturn;
     }
 
     /**
-     * Evolve the gameState according to the current player making the move passed in
-     * @param move - the move the current player makes
+     * Evolve the gameState according to the current player making the turn passed in
+     * @param turn - the turn the current player makes
      */
-    makeMove(move) {
+    makeMove(turn) {
         // TODO remember that a relative move must be multiplied by -1 when player b is making it!
+
+        // TODO change the cMove and playerMoves list
+
+        this.playerTurnIndex = this.playerTurnIndex ? 0 : 1;
     }
 
     /**
-     * Evolve the gameState according to the non-current player unmaking the move passed in
-     * @param move - the move the other player should unmake
+     * Evolve the gameState according to the non-current player unmaking the turn passed in
+     * @param turn - the turn the other player should unmake
      */
-    unmakeMove(move) {
+    unmakeMove(turn) {
         
+        this.playerTurnIndex = this.playerTurnIndex ? 0 : 1;
     }
 
     /**
