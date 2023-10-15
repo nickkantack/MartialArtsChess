@@ -311,18 +311,36 @@ describe("MartialArtsChessTest", function() {
             for (let i = 0; i < 30; i++) {
                 while (!game.isGameOver()) {
                     const goodPlayerMoveAndProb = game.getBestMove();
-                    console.log(`Going to make move ${goodPlayerMoveAndProb[0]} for a win prob of ${goodPlayerMoveAndProb[1]}`);
                     game.makeMove(goodPlayerMoveAndProb[0]);
-                    console.log(game.squareToSerialMap);
                     if (!game.isGameOver()) {
                         const eligibleMoves = game.getMoves();
                         const indexOfChosenMove = parseInt(Math.random() * eligibleMoves.length);
-                        console.log(`Going to make move ${eligibleMoves[indexOfChosenMove]}`);
                         game.makeMove(eligibleMoves[indexOfChosenMove]);
-                        console.log(game.squareToSerialMap);
                     }
                 }
                 assert.strictEqual(game.getWinningPlayerIndex(), 0);
+            }
+        });
+        it("Taking best move never loses to a random mover, with random mover going first", () => {
+            let game = new MartialArtsChess([
+                [[1, -1], [-1, 1], [-2, 0]], // Rabbit
+                [[-1, -1], [1, 1], [2, 0]], // Other rabbit
+                [[1, 0], [0, -1], [0, 1]], // cross one
+                [[-1, -1], [-1, 0], [1, 0], [1, 1]], // snake
+                [[-1, 1], [1, 1], [0, -1]], // Mantis
+            ]);
+            game.treeSearchMaxDepth = 4;
+            for (let i = 0; i < 30; i++) {
+                while (!game.isGameOver()) {
+                    const eligibleMoves = game.getMoves();
+                    const indexOfChosenMove = parseInt(Math.random() * eligibleMoves.length);
+                    game.makeMove(eligibleMoves[indexOfChosenMove]);
+                    if (!game.isGameOver()) {
+                        const goodPlayerMoveAndProb = game.getBestMove();
+                        game.makeMove(goodPlayerMoveAndProb[0]);
+                    }
+                }
+                assert.strictEqual(game.getWinningPlayerIndex(), 1);
             }
         });
     });

@@ -136,6 +136,9 @@ class MartialArtsChess extends Game {
                     // If a friendly piece is at the destination square, skip this move
                     if (this.squareToSerialMap[destinationSquareAsString] && new RegExp(`${playerLetter}[0-4]{1}`).test(this.squareToSerialMap[destinationSquareAsString])) continue;
                     const capturedPiece = this.squareToSerialMap[destinationSquareAsString] || null;
+                    // If the capture piece ends in "2" and is on its team's stairs, stil this move
+                    if (playerLetter === "a" && capturedPiece === "b2" && destinationSquareAsString === "2,4") continue;
+                    if (playerLetter === "b" && capturedPiece === "a2" && destinationSquareAsString === "2,0") continue;
                     const turn = [pieceSerial, move, this.cMove, relativeMove, capturedPiece];
                     movesToReturn.push(turn);
                 }
