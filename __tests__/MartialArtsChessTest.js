@@ -161,6 +161,88 @@ describe("MartialArtsChessTest", function() {
             assert.strictEqual(game.bMoves.length, 2);
             assert.strictEqual(game.cMove, "m4");
         });
+        it("moving twice, undoing twice, and getting the original game state", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_ALL_CAN_MOVE);
+            const turns = game.getMoves();
+            let turnsTaken = [];
+            for (let i = 0; i < 2; i++) {
+                const turns = game.getMoves();
+                turnsTaken.push(turns[0]);
+                game.makeMove(turns[0]);
+            }
+            for (let i = 0; i < 2; i++) {
+                console.log(turnsTaken);
+                console.log(`Unmaking turn ${turnsTaken[turnsTaken.length - 1]}`);
+                game.unmakeMove(turnsTaken[turnsTaken.length - 1]);
+                turnsTaken.splice(turnsTaken.length - 1, 1);
+            }
+            assert.strictEqual(game.playerTurnIndex, 0);
+            // Assert that the lower left corner is empty because a0 moved
+            console.log(JSON.stringify(game.aSerialToSquareMap));
+            console.log(JSON.stringify(game.bSerialToSquareMap));
+            assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,0"), true);
+            assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,1"), false);
+            const coordinatesOfa0 = game.aSerialToSquareMap["a0"];
+            assert.strictEqual(coordinatesOfa0[0], 0);
+            assert.strictEqual(coordinatesOfa0[1], 0);
+            // Assert the other pieces are still where they started
+            for (let i = 0; i <= 4; i++) {
+                assert.strictEqual(game.squareToSerialMap.hasOwnProperty(`${i},0`), true);
+            }
+            for (let i = 0; i <= 4; i++) {
+                assert.strictEqual(game.squareToSerialMap.hasOwnProperty(`${i},4`), true);
+            }
+            assert.strictEqual(game.aMoves.includes("m0"), true);
+            assert.strictEqual(game.aMoves.includes("m1"), true);
+            assert.strictEqual(game.aMoves.length, 2);
+            assert.strictEqual(game.bMoves.includes("m2"), true);
+            assert.strictEqual(game.bMoves.includes("m3"), true);
+            assert.strictEqual(game.bMoves.length, 2);
+            assert.strictEqual(game.cMove, "m4");
+        });
+        it("move 10 times, undo all moves, back to original state", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_ALL_CAN_MOVE);
+            const turns = game.getMoves();
+            let turnsTaken = [];
+            for (let i = 0; i < 10; i++) {
+                const turns = game.getMoves();
+                console.log(game.squareToSerialMap);
+                console.log(`Taking turn ${turns[0]}`);
+                turnsTaken.push(turns[0]);
+                game.makeMove(turns[0]);
+            }
+            for (let i = 0; i < 10; i++) {
+                console.log(turnsTaken);
+                console.log(`Unmaking turn ${turnsTaken[turnsTaken.length - 1]}`);
+                console.log(game.aSerialToSquareMap);
+                console.log(game.bSerialToSquareMap);
+                game.unmakeMove(turnsTaken[turnsTaken.length - 1]);
+                turnsTaken.splice(turnsTaken.length - 1, 1);
+            }
+            assert.strictEqual(game.playerTurnIndex, 0);
+            // Assert that the lower left corner is empty because a0 moved
+            console.log(JSON.stringify(game.aSerialToSquareMap));
+            console.log(JSON.stringify(game.bSerialToSquareMap));
+            assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,0"), true);
+            assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,1"), false);
+            const coordinatesOfa0 = game.aSerialToSquareMap["a0"];
+            assert.strictEqual(coordinatesOfa0[0], 0);
+            assert.strictEqual(coordinatesOfa0[1], 0);
+            // Assert the other pieces are still where they started
+            for (let i = 0; i <= 4; i++) {
+                assert.strictEqual(game.squareToSerialMap.hasOwnProperty(`${i},0`), true);
+            }
+            for (let i = 0; i <= 4; i++) {
+                assert.strictEqual(game.squareToSerialMap.hasOwnProperty(`${i},4`), true);
+            }
+            assert.strictEqual(game.aMoves.includes("m0"), true);
+            assert.strictEqual(game.aMoves.includes("m1"), true);
+            assert.strictEqual(game.aMoves.length, 2);
+            assert.strictEqual(game.bMoves.includes("m2"), true);
+            assert.strictEqual(game.bMoves.includes("m3"), true);
+            assert.strictEqual(game.bMoves.length, 2);
+            assert.strictEqual(game.cMove, "m4");
+        });
     });
     describe("reset results in game uncontaminated by previous game", () => {
         

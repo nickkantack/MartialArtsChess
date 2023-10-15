@@ -131,7 +131,7 @@ class MartialArtsChess extends Game {
                 for (let relativeMove of this.serialToRelativeMoveMap[move]) {
                     const destinationSquare = [originatingSquare[0] + reflectionMultiplier * relativeMove[0], originatingSquare[1] + reflectionMultiplier * relativeMove[1]];
                     // If the destination square is out of bounds, skip this relative move
-                    if (destinationSquare[0] < 0 || destinationSquare[0] > 4 || destinationSquare[1] < -1 || destinationSquare[1] > 4) continue;
+                    if (destinationSquare[0] < 0 || destinationSquare[0] > 4 || destinationSquare[1] < 0 || destinationSquare[1] > 4) continue;
                     const destinationSquareAsString = this.#getSquareAsString(destinationSquare);
                     // If a friendly piece is at the destination square, skip this move
                     if (this.squareToSerialMap[destinationSquareAsString] && new RegExp(`${playerLetter}[0-4]{1}`).test(this.squareToSerialMap[destinationSquareAsString])) continue;
@@ -199,7 +199,7 @@ class MartialArtsChess extends Game {
             ${this.squareToSerialMap[destinationSquareAsString]}` : `match the expected capture piece of turn ${turn}, but it had ${this.squareToSerialMap[destinationSquareAsString]} 
             instead.`}`);
         }
-        if (destinationSquare[0] < 0 || destinationSquare[1] > 4 || destinationSquare[1] < 0 || destinationSquare[1] > 4) {
+        if (destinationSquare[0] < 0 || destinationSquare[0] > 4 || destinationSquare[1] < 0 || destinationSquare[1] > 4) {
             throw new Error(`Can't move piece to destination square ${destinationSquare} since it is off the board.`);
         }
 
@@ -274,9 +274,9 @@ class MartialArtsChess extends Game {
         if (capturedPieceOrNull) {
             this.squareToSerialMap[destinationSquareAsString] = capturedPieceOrNull;
             if (this.playerTurnIndex) {
-                this.aSerialToSquareMap[capturedPieceOrNull] = destinationSquare;
-            } else {
                 this.bSerialToSquareMap[capturedPieceOrNull] = destinationSquare;
+            } else {
+                this.aSerialToSquareMap[capturedPieceOrNull] = destinationSquare;
             }
         } else {
             delete this.squareToSerialMap[destinationSquareAsString];
