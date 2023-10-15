@@ -1,4 +1,5 @@
 const MartialArtsChess = require("../scripts/MartialArtsChess");
+const Game = require("../scripts/Game");
 const assert = require("assert");
 
 DEFAULT_MOVE_LIST = [
@@ -116,6 +117,42 @@ describe("MartialArtsChessTest", function() {
             delete game.bSerialToSquareMap["b1"];
             assert.strictEqual(game.getEstimatedWinningProbability(0), 4 * 3 / (4 * 3 + 3 * 3));
             assert.strictEqual(game.getEstimatedWinningProbability(1), 3 * 3 / (4 * 3 + 3 * 3));
+        });
+    });
+    describe("win conditions", () => {
+        it("start of the game has no winner", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            assert.strictEqual(game.getWinningPlayerIndex(), Game.NO_WINNER_PLAYER_INDEX);
+        });
+        it("a guru is captured", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            delete game.aSerialToSquareMap["a2"];
+            assert.strictEqual(game.getWinningPlayerIndex(), 1);
+        });
+        it("b guru is captured", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            delete game.bSerialToSquareMap["b2"];
+            assert.strictEqual(game.getWinningPlayerIndex(), 0);
+        });
+        it("a guru is on row of b steps but not on column of b steps", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            game.aSerialToSquareMap["a2"] = [0, 4];
+            assert.strictEqual(game.getWinningPlayerIndex(), Game.NO_WINNER_PLAYER_INDEX);
+        });
+        it("b guru is on row of a steps but not on column of a steps", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            game.bSerialToSquareMap["b2"] = [0, 0];
+            assert.strictEqual(game.getWinningPlayerIndex(), Game.NO_WINNER_PLAYER_INDEX);
+        });
+        it("a guru is on b steps", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            game.aSerialToSquareMap["a2"] = [2, 4];
+            assert.strictEqual(game.getWinningPlayerIndex(), 0);
+        });
+        it("b guru is on a steps", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            game.bSerialToSquareMap["b2"] = [2, 0];
+            assert.strictEqual(game.getWinningPlayerIndex(), 1);
         });
     });
 });

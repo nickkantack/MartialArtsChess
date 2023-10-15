@@ -169,7 +169,11 @@ class MartialArtsChess extends Game {
      * @returns the winning player index, or, {@link Game.NO_WINNER_PLAYER_INDEX} if stalemate or the game is ongoing
      */
     getWinningPlayerIndex() {
-        
+        if (!this.aSerialToSquareMap.hasOwnProperty("a2")) return 1;
+        if (this.bSerialToSquareMap.hasOwnProperty("b2") && this.bSerialToSquareMap["b2"][0] === 2 && this.bSerialToSquareMap["b2"][1] === 0) return 1;
+        if (!this.bSerialToSquareMap.hasOwnProperty("b2")) return 0;
+        if (this.aSerialToSquareMap.hasOwnProperty("a2") && this.aSerialToSquareMap["a2"][0] === 2 && this.aSerialToSquareMap["a2"][1] === 4) return 0;
+        return Game.NO_WINNER_PLAYER_INDEX;
     }
 
     /**
