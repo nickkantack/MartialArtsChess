@@ -34,8 +34,8 @@ class MartialArtsChess extends Game {
 
     /*
     A "turn" consists of an array of three serial numbers of the following structure
-    [serialNumberOfPieceMakingMove, serialNumberOfRelativeMove, serialNumberOfPieceCaptured, or null if no piece was captured]
-    and example would be ["a2", "m2", null] (no piece was captured), and ["b3", "m1", "a1"] where piece
+    [serialNumberOfPieceMakingMove, serialNumberOfRelativeMove, serialNumberOfCMove, relativeMove, serialNumberOfPieceCaptured, or null if no piece was captured]
+    and example would be ["a2", "m2", "m1", [0, 1], null] (no piece was captured), and ["b3", "m1", "m2", [0, 1], "a1"] where piece
     "a1" was captured.
     */
 
@@ -132,11 +132,11 @@ class MartialArtsChess extends Game {
                     const destinationSquare = [originatingSquare[0] + reflectionMultiplier * relativeMove[0], originatingSquare[1] + reflectionMultiplier * relativeMove[1]];
                     // If the destination square is out of bounds, skip this relative move
                     if (destinationSquare[0] < 0 || destinationSquare[0] > 4 || destinationSquare[1] < -1 || destinationSquare[1] > 4) continue;
-                    const destinationSquareAsString = `${destinationSquare[0]},${destinationSquare[1]}`;
+                    const destinationSquareAsString = this.#getSquareAsString(destinationSquare);
                     // If a friendly piece is at the destination square, skip this move
                     if (this.squareToSerialMap[destinationSquareAsString] && new RegExp(`${playerLetter}[0-4]{1}`).test(this.squareToSerialMap[destinationSquareAsString])) continue;
                     const capturedPiece = this.squareToSerialMap[destinationSquareAsString] || null;
-                    const turn = [pieceSerial, relativeMove, capturedPiece];
+                    const turn = [pieceSerial, move, this.cMove, relativeMove, capturedPiece];
                     movesToReturn.push(turn);
                 }
             }
@@ -149,9 +149,84 @@ class MartialArtsChess extends Game {
      * @param turn - the turn the current player makes
      */
     makeMove(turn) {
-        // TODO remember that a relative move must be multiplied by -1 when player b is making it!
+        const movingPieceSerial = turn[0];
+        const moveSerial = turn[1];
+        const relativeMove = turn[3];
+        const capturedPieceOrNull = turn[4];
 
-        // TODO change the cMove and playerMoves list
+        // Remove captured pieces from the appropriate serial to square map
+        if (capturedPieceOrNull) {
+            if (this.playerTurnIndex === 0) {
+                if (!this.bSerialToSquareMap.hasOwnProperty(capturedPieceOrNull)) {
+                    throw new Error(`Expected to capture piece ${capturedPieceOrNull}, but this serial was not a key in bSerialToSquareMap.`);
+                }
+                delete this.bSerialToSquareMap[capturedPieceOrNull];
+            } else {
+                if (!this.aSerialToSquareMap.hasOwnProperty(capturedPieceOrNull)) {
+                    throw new Error(`Expected to capture piece ${capturedPieceOrNull}, but this serial was not a key in aSerialToSquareMap.`);
+                }
+                delete this.aSerialToSquareMap[capturedPieceOrNull];
+            }
+        }
+
+        // Just make sure we have a starting position for the moving piece
+        if (this.playerTurnIndex) {
+            if (!this.bSerialToSquareMap.hasOwnProperty(movingPieceSerial)) {
+                throw new Error(`Expected to find moving piece serial ${movingPieceSerial} in keys of bSerialToSquareMap, but did not find it.`);
+            }
+        } else {
+            if (!this.aSerialToSquareMap.hasOwnProperty(movingPieceSerial)) {
+                throw new Error(`Expected to find moving piece serial ${movingPieceSerial} in keys of aSerialToSquareMap, but did not find it.`);
+            }
+        }
+
+        // Change the square to serial map to reflect the moving piece is no longer at its starting square
+        const startStringAsArray = this.playerTurnIndex ? this.bSerialToSquareMap[movingPieceSerial] : this.aSerialToSquareMap[movingPieceSerial];
+        const startSquareAsString = this.#getSquareAsString(startStringAsArray);
+        // The start square is necessarily left empty
+        delete this.squareToSerialMap[startSquareAsString];
+        
+        // Calculate the destination square
+        const reflectionMultiplier = this.playerTurnIndex ? -1 : 1; // Handle 180 degree rotation between player perspectives
+        const destinationSquare = [startStringAsArray[0] + reflectionMultiplier * relativeMove[0], startStringAsArray[1] + reflectionMultiplier * relativeMove[1]];
+        const destinationSquareAsString = this.#getSquareAsString(destinationSquare);
+
+        // Make sure piece can move to this location (board edges and same team capture)
+        if (this.squareToSerialMap.hasOwnProperty(destinationSquareAsString) && this.squareToSerialMap[destinationSquareAsString] !== capturedPieceOrNull) {
+            throw new Error(`Inconsistent maps: square to serial map should 
+            ${capturedPieceOrNull == null ? `no key for destination ${destination} to execute turn ${turn}, 
+            but it had the key with value 
+            ${this.squareToSerialMap[destinationSquareAsString]}` : `match the expected capture piece of turn ${turn}, but it had ${this.squareToSerialMap[destinationSquareAsString]} 
+            instead.`}`);
+        }
+        if (destinationSquare[0] < 0 || destinationSquare[1] > 4 || destinationSquare[1] < 0 || destinationSquare[1] > 4) {
+            throw new Error(`Can't move piece to destination square ${destinationSquare} since it is off the board.`);
+        }
+
+        // Update the square to serial map to reflect a new piece at the destination square
+        this.squareToSerialMap[destinationSquareAsString] = movingPieceSerial;
+
+        // Update the serial to square map to show the moving piece is at its new square
+        if (this.playerTurnIndex) {
+            this.bSerialToSquareMap[movingPieceSerial] = destinationSquare;
+        } else {
+            this.aSerialToSquareMap[movingPieceSerial] = destinationSquare;
+        }
+
+        // change the cMove and playerMoves list
+        if (this.playerTurnIndex) {
+            if (!this.bMoves.includes(moveSerial)) throw new Error(`Expected that bMoves would contain ${moveSerial} from turn ${turn} but it did not. It had ${this.bMoves}`);
+            // Rotate in the cMove for this player to fill the void left by the move used
+            this.bMoves.splice(this.bMoves.indexOf(moveSerial), 1);
+            this.bMoves.push(this.cMove);
+        } else {
+            if(!this.aMoves.includes(moveSerial)) throw new Error(`Expected that aMoves would contain ${moveSerial} from turn ${turn} but it did not. It had ${this.aMoves}`);
+            // Rotate in the cMove for this player to fill the void left by the move used
+            this.aMoves.splice(this.aMoves.indexOf(moveSerial), 1);
+            this.aMoves.push(this.cMove);
+        }
+        // Place the used move into neither player's list of available moves
+        this.cMove = moveSerial;
 
         this.playerTurnIndex = this.playerTurnIndex ? 0 : 1;
     }
@@ -161,6 +236,70 @@ class MartialArtsChess extends Game {
      * @param turn - the turn the other player should unmake
      */
     unmakeMove(turn) {
+
+        const movingPieceSerial = turn[0];
+        const moveSerial = turn[1];
+        const oldCMove = turn[2];
+        const relativeMove = turn[3];
+        const capturedPieceOrNull = turn[4];
+
+        // Just make sure we have a starting position for the moving piece
+        if (!this.playerTurnIndex) {
+            if (!this.bSerialToSquareMap.hasOwnProperty(movingPieceSerial)) {
+                throw new Error(`Expected to find moving piece serial ${movingPieceSerial} in keys of bSerialToSquareMap, but did not find it.`);
+            }
+        } else {
+            if (!this.aSerialToSquareMap.hasOwnProperty(movingPieceSerial)) {
+                throw new Error(`Expected to find moving piece serial ${movingPieceSerial} in keys of aSerialToSquareMap, but did not find it.`);
+            }
+        }
+
+        // Calculate the square that would have been the moving piece's starting square
+        const destinationSquare = this.playerTurnIndex ? this.aSerialToSquareMap[movingPieceSerial] : this.bSerialToSquareMap[movingPieceSerial];
+        const destinationSquareAsString = this.#getSquareAsString(destinationSquare);
+        const reflectionMultiplier = !this.playerTurnIndex ? -1 : 1; // Handle 180 degree rotation between player perspectives
+        const originatingSquare = [destinationSquare[0] - reflectionMultiplier * relativeMove[0], destinationSquare[1] - reflectionMultiplier * relativeMove[1]];
+        const originatingSquareAsString = this.#getSquareAsString(originatingSquare);
+
+        // Check that the starting square is empty
+        if (this.squareToSerialMap.hasOwnProperty(originatingSquareAsString)) throw new Error(`Expected originating square ${originatingSquare} for undoing turn ${turn} would be empty, but currently it has ${this.squareToSerialMap[originatingSquareAsString]}`);
+
+        // Ff there was a captured piece, make sure the piece isn't already on the board (no duplication)
+        if (capturedPieceOrNull && (this.aSerialToSquareMap.hasOwnProperty(capturedPieceOrNull) || this.bSerialToSquareMap.hasOwnProperty(capturedPieceOrNull))) throw new Error(`Expected that while undoing turn ${turn} the captured piece ${capturedPieceOrNull} would not still be on the board, but it was.`);
+
+        // Check that the movingPieceSerial is a if it's player b's turn, or vice versa
+        if ((this.playerTurnIndex && /b/.test(movingPieceSerial)) || (!this.playerTurnIndex && /a/.test(movingPieceSerial))) throw new Error(`Current player index ${this.playerTurnIndex} matches the player that should have made the turn we're undoing (${turn}), which implies that the player could have moved multiple times in a row.`);
+
+        // If we make it here, the turn can be undone, so do that now
+        if (capturedPieceOrNull) {
+            this.squareToSerialMap[destinationSquareAsString] = capturedPieceOrNull;
+            if (this.playerTurnIndex) {
+                this.aSerialToSquareMap[capturedPieceOrNull] = destinationSquare;
+            } else {
+                this.bSerialToSquareMap[capturedPieceOrNull] = destinationSquare;
+            }
+        } else {
+            delete this.squareToSerialMap[destinationSquareAsString];
+        }
+        this.squareToSerialMap[originatingSquareAsString] = movingPieceSerial;
+        if (this.playerTurnIndex) {
+            this.aSerialToSquareMap[movingPieceSerial] = originatingSquare;
+        } else {
+            this.bSerialToSquareMap[movingPieceSerial] = originatingSquare;
+        }
+
+        if (this.cMove !== moveSerial) throw new Error(`Can't undo a move that used ${cMove} if that's not the current cMove, and the current cMove is ${this.cMove}`);
+        
+        this.cMove = oldCMove;
+        if (!this.playerTurnIndex) {
+            if (!this.bMoves.includes(oldCMove)) throw new Error(`To undo moving piece ${movingPieceSerial}, bMoves must have the old c move ${oldCMove}, but instead it only has ${this.bMoves}`);
+            this.bMoves.splice(this.bMoves.indexOf(oldCMove), 1);
+            this.bMoves.push(moveSerial);
+        } else {
+            if (!this.aMoves.includes(oldCMove)) throw new Error(`To undo moving piece ${movingPieceSerial}, aMoves must have the old c move ${oldCMove}, but instead it only has ${this.aMoves}`);
+            this.aMoves.splice(this.aMoves.indexOf(oldCMove), 1);
+            this.aMoves.push(moveSerial);
+        }
         
         this.playerTurnIndex = this.playerTurnIndex ? 0 : 1;
     }
@@ -198,6 +337,11 @@ class MartialArtsChess extends Game {
 
     isGameOver() {
         return (this.getMoves().length === 0) || (this.getWinningPlayerIndex() !== Game.NO_WINNER_PLAYER_INDEX);
+    }
+
+    #getSquareAsString(array) {
+        if (array.length !== 2) throw new Error(`Cannot convert square array to string since it does not have only two coordinates. Array was ${array}`);
+        return `${array[0]},${array[1]}`;
     }
 
 }

@@ -2,7 +2,7 @@ const MartialArtsChess = require("../scripts/MartialArtsChess");
 const Game = require("../scripts/Game");
 const assert = require("assert");
 
-DEFAULT_MOVE_LIST = [
+DEFAULT_MOVE_LIST_A_CANT_MOVE = [
     [[1, 0]],
     [[-1, 0]],
     [[0, 1]],
@@ -10,9 +10,17 @@ DEFAULT_MOVE_LIST = [
     [[0, -1]],
 ];
 
+DEFAULT_MOVE_LIST_ALL_CAN_MOVE = [
+    [[0, 1]],
+    [[0, 2]],
+    [[1, 1]],
+    [[1, 1]],
+    [[-1, 1]],
+];
+
 describe("MartialArtsChessTest", function() {
     describe("Constructor and reset result in a proper initial game state", function() {
-        let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+        let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
         it("Move lists", function() {
             assert.strictEqual(game.aMoves.length, 2, "aMoves has incorrect number of moves");
             assert.strictEqual(game.aMoves[0], "m0", "aMoves has incorrect move option 1");
@@ -74,30 +82,97 @@ describe("MartialArtsChessTest", function() {
         });
     });
     describe("Turn list is as expected", () => {
-        let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+        let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
         // Check that if player a only has horizontal moves, at the start they have no legal moves
-        assert.strictEqual(game.getMoves().length, 0);
+        const turns = game.getMoves();
+        assert.strictEqual(turns.length, 0);
         // Check that if player b has two valid vertical moves at the start, there are 10 possible turns
         game.playerTurnIndex = 1;
         assert.strictEqual(game.getMoves().length, 10);
+        for (let turn of turns) {
+            assert.strictEqual(/b[0-4]{1}/.test(turn[0]), true);
+            assert.strictEqual(/m[0-4]{1}/.test(turn[1]), true);
+            assert.strictEqual(/m[0-4]{1}/.test(turn[2]), true);
+            assert.strictEqual(turn[3].length, 2);
+            assert.strictEqual(turn.length, 4);
+        }
     });
     describe("Moves cause expected change", () => {
-        
+        it("Moving a0 forward one", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_ALL_CAN_MOVE);
+            const turns = game.getMoves();
+            assert.strictEqual(game.playerTurnIndex, 0);
+            assert.strictEqual(turns.length, 10);
+            const turnToTake = turns[0];
+            assert.strictEqual(turnToTake[0], "a0");
+            game.makeMove(turns[0]);
+            assert.strictEqual(game.playerTurnIndex, 1);
+            // Assert that the lower left corner is empty because a0 moved
+            assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,0"), false);
+            assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,1"), true);
+            const coordinatesOfa0 = game.aSerialToSquareMap["a0"];
+            assert.strictEqual(coordinatesOfa0[0], 0);
+            assert.strictEqual(coordinatesOfa0[1], 1);
+            // Assert the other pieces are still where they started
+            for (let i = 1; i <= 4; i++) {
+                assert.strictEqual(game.squareToSerialMap.hasOwnProperty(`${i},0`), true);
+            }
+            for (let i = 0; i <= 4; i++) {
+                assert.strictEqual(game.squareToSerialMap.hasOwnProperty(`${i},4`), true);
+            }
+            assert.strictEqual(game.aMoves.length, 2);
+            assert.strictEqual(game.aMoves.includes("m4"), true);
+            assert.strictEqual(game.aMoves.includes("m1"), true);
+            assert.strictEqual(game.bMoves.length, 2);
+            assert.strictEqual(game.bMoves.includes("m2"), true);
+            assert.strictEqual(game.bMoves.includes("m3"), true);
+        });
     });
     describe("Undoing moves is inverse of doing moves", () => {
-
+        it("moving a0 forward one and then undoing it", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_ALL_CAN_MOVE);
+            const turns = game.getMoves();
+            const turnToTake = turns[0];
+            assert.strictEqual(turnToTake[0], "a0");
+            game.makeMove(turns[0]);
+            game.unmakeMove(turns[0]);
+            assert.strictEqual(turnToTake[0], "a0");
+            assert.strictEqual(game.playerTurnIndex, 0);
+            // Assert that the lower left corner is empty because a0 moved
+            console.log(JSON.stringify(game.aSerialToSquareMap));
+            console.log(JSON.stringify(game.bSerialToSquareMap));
+            assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,0"), true);
+            assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,1"), false);
+            const coordinatesOfa0 = game.aSerialToSquareMap["a0"];
+            assert.strictEqual(coordinatesOfa0[0], 0);
+            assert.strictEqual(coordinatesOfa0[1], 0);
+            // Assert the other pieces are still where they started
+            for (let i = 0; i <= 4; i++) {
+                assert.strictEqual(game.squareToSerialMap.hasOwnProperty(`${i},0`), true);
+            }
+            for (let i = 0; i <= 4; i++) {
+                assert.strictEqual(game.squareToSerialMap.hasOwnProperty(`${i},4`), true);
+            }
+            assert.strictEqual(game.aMoves.includes("m0"), true);
+            assert.strictEqual(game.aMoves.includes("m1"), true);
+            assert.strictEqual(game.aMoves.length, 2);
+            assert.strictEqual(game.bMoves.includes("m2"), true);
+            assert.strictEqual(game.bMoves.includes("m3"), true);
+            assert.strictEqual(game.bMoves.length, 2);
+            assert.strictEqual(game.cMove, "m4");
+        });
     });
     describe("reset results in game uncontaminated by previous game", () => {
         
     });
     describe("player scores", () => {
         it("scores are even at start", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             assert.strictEqual(game.getEstimatedWinningProbability(0), 0.5);
             assert.strictEqual(game.getEstimatedWinningProbability(1), 0.5);
         });
         it("score increases as expected when guru makes progress", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             game.aSerialToSquareMap["a0"] = [0, 1];
             assert.strictEqual(game.getEstimatedWinningProbability(0), 0.5);
             assert.strictEqual(game.getEstimatedWinningProbability(1), 0.5);
@@ -109,7 +184,7 @@ describe("MartialArtsChessTest", function() {
             assert.strictEqual(game.getEstimatedWinningProbability(1), 0.5);
         });
         it("score decreases as expected when pieces are lost", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             delete game.aSerialToSquareMap["a0"];
             assert.strictEqual(game.getEstimatedWinningProbability(0), 4 * 3 / (4 * 3 + 5 * 3));
             assert.strictEqual(game.getEstimatedWinningProbability(1), 5 * 3 / (4 * 3 + 5 * 3));
@@ -121,36 +196,36 @@ describe("MartialArtsChessTest", function() {
     });
     describe("win conditions", () => {
         it("start of the game has no winner", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             assert.strictEqual(game.getWinningPlayerIndex(), Game.NO_WINNER_PLAYER_INDEX);
         });
         it("a guru is captured", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             delete game.aSerialToSquareMap["a2"];
             assert.strictEqual(game.getWinningPlayerIndex(), 1);
         });
         it("b guru is captured", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             delete game.bSerialToSquareMap["b2"];
             assert.strictEqual(game.getWinningPlayerIndex(), 0);
         });
         it("a guru is on row of b steps but not on column of b steps", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             game.aSerialToSquareMap["a2"] = [0, 4];
             assert.strictEqual(game.getWinningPlayerIndex(), Game.NO_WINNER_PLAYER_INDEX);
         });
         it("b guru is on row of a steps but not on column of a steps", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             game.bSerialToSquareMap["b2"] = [0, 0];
             assert.strictEqual(game.getWinningPlayerIndex(), Game.NO_WINNER_PLAYER_INDEX);
         });
         it("a guru is on b steps", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             game.aSerialToSquareMap["a2"] = [2, 4];
             assert.strictEqual(game.getWinningPlayerIndex(), 0);
         });
         it("b guru is on a steps", () => {
-            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             game.bSerialToSquareMap["b2"] = [2, 0];
             assert.strictEqual(game.getWinningPlayerIndex(), 1);
         });
