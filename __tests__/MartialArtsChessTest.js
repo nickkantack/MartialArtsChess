@@ -139,8 +139,6 @@ describe("MartialArtsChessTest", function() {
             assert.strictEqual(turnToTake[0], "a0");
             assert.strictEqual(game.playerTurnIndex, 0);
             // Assert that the lower left corner is empty because a0 moved
-            console.log(JSON.stringify(game.aSerialToSquareMap));
-            console.log(JSON.stringify(game.bSerialToSquareMap));
             assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,0"), true);
             assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,1"), false);
             const coordinatesOfa0 = game.aSerialToSquareMap["a0"];
@@ -171,15 +169,11 @@ describe("MartialArtsChessTest", function() {
                 game.makeMove(turns[0]);
             }
             for (let i = 0; i < 2; i++) {
-                console.log(turnsTaken);
-                console.log(`Unmaking turn ${turnsTaken[turnsTaken.length - 1]}`);
                 game.unmakeMove(turnsTaken[turnsTaken.length - 1]);
                 turnsTaken.splice(turnsTaken.length - 1, 1);
             }
             assert.strictEqual(game.playerTurnIndex, 0);
             // Assert that the lower left corner is empty because a0 moved
-            console.log(JSON.stringify(game.aSerialToSquareMap));
-            console.log(JSON.stringify(game.bSerialToSquareMap));
             assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,0"), true);
             assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,1"), false);
             const coordinatesOfa0 = game.aSerialToSquareMap["a0"];
@@ -206,23 +200,15 @@ describe("MartialArtsChessTest", function() {
             let turnsTaken = [];
             for (let i = 0; i < 10; i++) {
                 const turns = game.getMoves();
-                console.log(game.squareToSerialMap);
-                console.log(`Taking turn ${turns[0]}`);
                 turnsTaken.push(turns[0]);
                 game.makeMove(turns[0]);
             }
             for (let i = 0; i < 10; i++) {
-                console.log(turnsTaken);
-                console.log(`Unmaking turn ${turnsTaken[turnsTaken.length - 1]}`);
-                console.log(game.aSerialToSquareMap);
-                console.log(game.bSerialToSquareMap);
                 game.unmakeMove(turnsTaken[turnsTaken.length - 1]);
                 turnsTaken.splice(turnsTaken.length - 1, 1);
             }
             assert.strictEqual(game.playerTurnIndex, 0);
             // Assert that the lower left corner is empty because a0 moved
-            console.log(JSON.stringify(game.aSerialToSquareMap));
-            console.log(JSON.stringify(game.bSerialToSquareMap));
             assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,0"), true);
             assert.strictEqual(game.squareToSerialMap.hasOwnProperty("0,1"), false);
             const coordinatesOfa0 = game.aSerialToSquareMap["a0"];
@@ -310,6 +296,34 @@ describe("MartialArtsChessTest", function() {
             let game = new MartialArtsChess(DEFAULT_MOVE_LIST_A_CANT_MOVE);
             game.bSerialToSquareMap["b2"] = [2, 0];
             assert.strictEqual(game.getWinningPlayerIndex(), 1);
+        });
+    });
+    describe("Calculating good moves", () => {
+        it("Taking best move never loses to a random mover", () => {
+            let game = new MartialArtsChess([
+                [[1, -1], [-1, 1], [-2, 0]], // Rabbit
+                [[-1, -1], [1, 1], [2, 0]], // Other rabbit
+                [[1, 0], [0, -1], [0, 1]], // cross one
+                [[-1, -1], [-1, 0], [1, 0], [1, 1]], // snake
+                [[-1, 1], [1, 1], [0, -1]], // Mantis
+            ]);
+            game.treeSearchMaxDepth = 4;
+            for (let i = 0; i < 30; i++) {
+                while (!game.isGameOver()) {
+                    const goodPlayerMoveAndProb = game.getBestMove();
+                    console.log(`Going to make move ${goodPlayerMoveAndProb[0]} for a win prob of ${goodPlayerMoveAndProb[1]}`);
+                    game.makeMove(goodPlayerMoveAndProb[0]);
+                    console.log(game.squareToSerialMap);
+                    if (!game.isGameOver()) {
+                        const eligibleMoves = game.getMoves();
+                        const indexOfChosenMove = parseInt(Math.random() * eligibleMoves.length);
+                        console.log(`Going to make move ${eligibleMoves[indexOfChosenMove]}`);
+                        game.makeMove(eligibleMoves[indexOfChosenMove]);
+                        console.log(game.squareToSerialMap);
+                    }
+                }
+                assert.strictEqual(game.getWinningPlayerIndex(), 0);
+            }
         });
     });
 });
