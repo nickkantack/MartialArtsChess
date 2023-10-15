@@ -178,7 +178,17 @@ class MartialArtsChess extends Game {
      * @param playerIndex
      */
     getEstimatedWinningProbability(playerIndex) {
-        
+        // TODO let x = 3 * (number of pieces player a has) + 1 + rows between a's guru and b's steps
+        //  let y = 3 * (number of pieces player b has) + 1 + rows between b's guru and a's steps
+        //  if playerIndex === 0, then return 1 - e^(-xq) / (e^(-xq) + e^(-yq)) where q is a factor that
+        //  stresses tipping a balance in your favor over improving an already considerable lead.
+        const countOfPiecesForPlayerContemplatingNextMove = playerIndex ? Object.keys(this.bSerialToSquareMap).length : Object.keys(this.aSerialToSquareMap).length;
+        const countOfPiecesForPlayerNotContempaltingNextMove = !playerIndex ? Object.keys(this.bSerialToSquareMap).length : Object.keys(this.aSerialToSquareMap).length;
+        const progressTowardsStepsForPlayerContemplatingNextMove = playerIndex ? 4 - this.bSerialToSquareMap["b2"][1] : this.aSerialToSquareMap["a2"][1];
+        const progressTowardsStepsForPlayerNotContemplatingNextMove = !playerIndex ? 4 - this.bSerialToSquareMap["b2"][1] : this.aSerialToSquareMap["a2"][1];
+        const scoreOfPlayerConteplatingNextMove = 3 * countOfPiecesForPlayerContemplatingNextMove + progressTowardsStepsForPlayerContemplatingNextMove;
+        const scoreOfPlayerNotContemplatingNextMove = 3 * countOfPiecesForPlayerNotContempaltingNextMove + progressTowardsStepsForPlayerNotContemplatingNextMove;
+        return scoreOfPlayerConteplatingNextMove / (scoreOfPlayerConteplatingNextMove + scoreOfPlayerNotContemplatingNextMove);
     }
 
 

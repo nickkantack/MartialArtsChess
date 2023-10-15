@@ -1,15 +1,17 @@
 const MartialArtsChess = require("../scripts/MartialArtsChess");
 const assert = require("assert");
 
+DEFAULT_MOVE_LIST = [
+    [[1, 0]],
+    [[-1, 0]],
+    [[0, 1]],
+    [[0, 2]],
+    [[0, -1]],
+];
+
 describe("MartialArtsChessTest", function() {
     describe("Constructor and reset result in a proper initial game state", function() {
-        let game = new MartialArtsChess([
-            [[1, 0]],
-            [[-1, 0]],
-            [[0, 1]],
-            [[0, 2]],
-            [[0, -1]],
-        ]);
+        let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
         it("Move lists", function() {
             assert.strictEqual(game.aMoves.length, 2, "aMoves has incorrect number of moves");
             assert.strictEqual(game.aMoves[0], "m0", "aMoves has incorrect move option 1");
@@ -71,13 +73,7 @@ describe("MartialArtsChessTest", function() {
         });
     });
     describe("Turn list is as expected", () => {
-        let game = new MartialArtsChess([
-            [[1, 0]],
-            [[-1, 0]],
-            [[0, 1]],
-            [[0, 2]],
-            [[0, -1]],
-        ]);
+        let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
         // Check that if player a only has horizontal moves, at the start they have no legal moves
         assert.strictEqual(game.getMoves().length, 0);
         // Check that if player b has two valid vertical moves at the start, there are 10 possible turns
@@ -92,5 +88,34 @@ describe("MartialArtsChessTest", function() {
     });
     describe("reset results in game uncontaminated by previous game", () => {
         
+    });
+    describe("player scores", () => {
+        it("scores are even at start", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            assert.strictEqual(game.getEstimatedWinningProbability(0), 0.5);
+            assert.strictEqual(game.getEstimatedWinningProbability(1), 0.5);
+        });
+        it("score increases as expected when guru makes progress", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            game.aSerialToSquareMap["a0"] = [0, 1];
+            assert.strictEqual(game.getEstimatedWinningProbability(0), 0.5);
+            assert.strictEqual(game.getEstimatedWinningProbability(1), 0.5);
+            game.aSerialToSquareMap["a2"] = [0, 1];
+            assert.strictEqual(game.getEstimatedWinningProbability(0), (5 * 3 + 1) / (5 * 3 + 1 + 5 * 3));
+            assert.strictEqual(game.getEstimatedWinningProbability(1), 5 * 3 / (5 * 3 + 5 * 3 + 1));
+            game.bSerialToSquareMap["b2"] = [0, 3];
+            assert.strictEqual(game.getEstimatedWinningProbability(0), 0.5);
+            assert.strictEqual(game.getEstimatedWinningProbability(1), 0.5);
+        });
+        it("score decreases as expected when pieces are lost", () => {
+            let game = new MartialArtsChess(DEFAULT_MOVE_LIST);
+            delete game.aSerialToSquareMap["a0"];
+            assert.strictEqual(game.getEstimatedWinningProbability(0), 4 * 3 / (4 * 3 + 5 * 3));
+            assert.strictEqual(game.getEstimatedWinningProbability(1), 5 * 3 / (4 * 3 + 5 * 3));
+            delete game.bSerialToSquareMap["b0"];
+            delete game.bSerialToSquareMap["b1"];
+            assert.strictEqual(game.getEstimatedWinningProbability(0), 4 * 3 / (4 * 3 + 3 * 3));
+            assert.strictEqual(game.getEstimatedWinningProbability(1), 3 * 3 / (4 * 3 + 3 * 3));
+        });
     });
 });
