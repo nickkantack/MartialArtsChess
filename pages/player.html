@@ -6,6 +6,7 @@
     </head>
     <body>
         <div id="debug"></div>
+        <div id="originDiv"></div>
         <template id="mainBoardSquareTemplate">
             <svg class="mainBoardSquare" viewBox="0 0 100 100">
                 <path stroke="#AA9" stroke-width="3px" fill="#FFC" d="M0 0H100V100H0Z" />
@@ -23,11 +24,17 @@
         </template>
         <script>
             const debug = document.getElementById("debug");
+            const originDiv = document.getElementById("originDiv");
             const mainBoardSquareTemplate = document.getElementById("mainBoardSquareTemplate");
             const aPawnTemplate = document.getElementById("aPawnTemplate");
             const bPawnTemplate = document.getElementById("bPawnTemplate");
             let currentMouseCoordinatesOverBoard = null;
             let mainBoardUnitLength = null;
+
+            document.body.addEventListener("mousemove", (event) => {
+                debug.innerHTML = `${event.clientX - originDiv.offsetLeft}, ${event.clientY - originDiv.offsetTop}`;   
+            });
+
             // Create main board
             for (let i = 0; i <= 4; i++) {
                 for (let j = 0; j <= 4; j++) {
@@ -37,18 +44,6 @@
                     if (!mainBoardUnitLength) mainBoardUnitLength = unitLength;
                     mainSquare.style.transform = `translate(${(-2.5 + i) * unitLength}px, ${(-2.5 + j) * unitLength}px)`;
                     mainSquare.id = `mainSquare-${i},${j}`;
-                    mainSquare.addEventListener("mouseover", () => {
-                        currentMouseCoordinatesOverBoard = [i, j];
-                        debug.innerHTML = currentMouseCoordinatesOverBoard;
-                    });
-                    mainSquare.addEventListener("mouseleave", () => {
-                        if (currentMouseCoordinatesOverBoard && currentMouseCoordinatesOverBoard[0] === i && currentMouseCoordinatesOverBoard[1] === j) {
-                            currentMouseCoordinatesOverBoard = null;
-                        } else {
-                            currentMouseCoordinatesOverBoard = [i, j];
-                        }
-                        debug.innerHTML = currentMouseCoordinatesOverBoard;
-                    });
                     document.body.appendChild(mainSquare);
                 }
             }
@@ -60,7 +55,11 @@
                     // Make a pawn
                     const pawn = aPawnTemplate.content.cloneNode(true).querySelector(".aPawn");
                     const mainSquare = document.getElementById(`mainSquare-${i},4`);
-                    mainSquare.appendChild(pawn);
+                    pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 4) * mainBoardUnitLength}px)`;
+                    pawn.addEventListener("mouseover", () => {
+                        console.log("test");  
+                    });
+                    document.body.appendChild(pawn);
                 }
             }
             // Create the b pieces
@@ -71,7 +70,8 @@
                     // Make a pawn
                     const pawn = bPawnTemplate.content.cloneNode(true).querySelector(".bPawn");
                     const mainSquare = document.getElementById(`mainSquare-${i},0`);
-                    mainSquare.appendChild(pawn);
+                    pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 0) * mainBoardUnitLength}px)`;
+                    document.body.appendChild(pawn);
                 }
             }
         </script>

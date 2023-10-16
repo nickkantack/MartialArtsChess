@@ -22,3 +22,9 @@
     width: 100px;
     height: 100px;
 }
+
+#originDiv {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+}
