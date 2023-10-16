@@ -8,7 +8,7 @@
         <div id="debug"></div>
         <template id="mainBoardSquareTemplate">
             <svg class="mainBoardSquare" viewBox="0 0 100 100">
-                <path stroke="#AA9" stroke-width="3px" fill="#CCA" d="M0 0H100V100H0Z" />
+                <path stroke="#AA9" stroke-width="3px" fill="#FFC" d="M0 0H100V100H0Z" />
             </svg>
         </template>
         <template id="aPawnTemplate">
@@ -32,14 +32,16 @@
             for (let i = 0; i <= 4; i++) {
                 for (let j = 0; j <= 4; j++) {
                     const mainSquare = mainBoardSquareTemplate.content.cloneNode(true).querySelector(".mainBoardSquare");
+                    // TODO support Chrome, which fails getting the unitLength as shown below
                     const unitLength = mainSquare.width.baseVal.value;
                     if (!mainBoardUnitLength) mainBoardUnitLength = unitLength;
                     mainSquare.style.transform = `translate(${(-2.5 + i) * unitLength}px, ${(-2.5 + j) * unitLength}px)`;
+                    mainSquare.id = `mainSquare-${i},${j}`;
                     mainSquare.addEventListener("mouseover", () => {
                         currentMouseCoordinatesOverBoard = [i, j];
                         debug.innerHTML = currentMouseCoordinatesOverBoard;
                     });
-                    mainSquare.addEventListener("mouseout", () => {
+                    mainSquare.addEventListener("mouseleave", () => {
                         if (currentMouseCoordinatesOverBoard && currentMouseCoordinatesOverBoard[0] === i && currentMouseCoordinatesOverBoard[1] === j) {
                             currentMouseCoordinatesOverBoard = null;
                         } else {
@@ -57,8 +59,8 @@
                 } else {
                     // Make a pawn
                     const pawn = aPawnTemplate.content.cloneNode(true).querySelector(".aPawn");
-                    pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 4) * mainBoardUnitLength}px)`;
-                    document.body.appendChild(pawn);
+                    const mainSquare = document.getElementById(`mainSquare-${i},4`);
+                    mainSquare.appendChild(pawn);
                 }
             }
             // Create the b pieces
@@ -68,8 +70,8 @@
                 } else {
                     // Make a pawn
                     const pawn = bPawnTemplate.content.cloneNode(true).querySelector(".bPawn");
-                    pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 0) * mainBoardUnitLength}px)`;
-                    document.body.appendChild(pawn);
+                    const mainSquare = document.getElementById(`mainSquare-${i},0`);
+                    mainSquare.appendChild(pawn);
                 }
             }
         </script>
