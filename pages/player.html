@@ -31,8 +31,20 @@
             let currentMouseCoordinatesOverBoard = null;
             let mainBoardUnitLength = null;
 
+            let selectedPiece = null;
+
             document.body.addEventListener("mousemove", (event) => {
                 debug.innerHTML = `${event.clientX - originDiv.offsetLeft}, ${event.clientY - originDiv.offsetTop}`;   
+                if (mainBoardUnitLength) {
+                    currentMouseCoordinatesOverBoard = [parseInt((event.clientX - originDiv.offsetLeft) / mainBoardUnitLength + 2.5),
+                        -parseInt((event.clientY - originDiv.offsetTop) / mainBoardUnitLength - 2.5)];
+                    debug.innerHTML += `<br/>${currentMouseCoordinatesOverBoard[0]},${currentMouseCoordinatesOverBoard[1]}`;
+                }
+                if (selectedPiece) {
+                    let computedSyle = window.getComputedStyle(selectedPiece);
+                    let matrix = new WebKitCSSMatrix(computedSyle.transform);
+                    selectedPiece.style.transform = `translate(${matrix.m41 + event.movementX}px, ${matrix.m42 + event.movementY}px)`;
+                }
             });
 
             // Create main board
@@ -56,8 +68,14 @@
                     const pawn = aPawnTemplate.content.cloneNode(true).querySelector(".aPawn");
                     const mainSquare = document.getElementById(`mainSquare-${i},4`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 4) * mainBoardUnitLength}px)`;
-                    pawn.addEventListener("mouseover", () => {
-                        console.log("test");  
+                    pawn.addEventListener("mousedown", () => {
+                        selectedPiece = pawn;
+                        let computedSyle = window.getComputedStyle(pawn);
+                        let matrix = new WebKitCSSMatrix(computedSyle.transform);
+                        pawn.style.transform = `translate(${matrix.m41 + currentMouseCoordinatesOverBoard[0]}px, ${matrix.m42 + currentMouseCoordinatesOverBoard[1]}px)`;
+                    });
+                    pawn.addEventListener("mouseup", () => {
+                        selectedPiece = null;
                     });
                     document.body.appendChild(pawn);
                 }
@@ -71,6 +89,12 @@
                     const pawn = bPawnTemplate.content.cloneNode(true).querySelector(".bPawn");
                     const mainSquare = document.getElementById(`mainSquare-${i},0`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 0) * mainBoardUnitLength}px)`;
+                    pawn.addEventListener("mousedown", () => {
+                        selectedPiece = pawn;
+                    });
+                    pawn.addEventListener("mouseup", () => {
+                        selectedPiece = null;
+                    });
                     document.body.appendChild(pawn);
                 }
             }
