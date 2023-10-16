@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Player</title>
+        <link rel="stylesheet" href="../styles/style.css"/>
+    </head>
+    <body>
+        <div id="debug">
+
+        </div>
+        <template id="mainBoardSquareTemplate">
+            <svg class="mainBoardSquare" viewBox="0 0 100 100">
+                <path stroke="#AA9" stroke-width="3px" fill="#CCA" d="M0 0H100V100H0Z" />
+            </svg>
+        </template>
+        <script>
+            const debug = document.getElementById("debug");
+            const mainBoardSquareTemplate = document.getElementById("mainBoardSquareTemplate");
+            let currentMouseCoordinatesOverBoard = null;
+            // Create main board
+            for (let i = 0; i <= 4; i++) {
+                for (let j = 0; j <= 4; j++) {
+                    const mainSquare = mainBoardSquareTemplate.content.cloneNode(true).querySelector(".mainBoardSquare");
+                    mainSquare.style.left = "50%";
+                    mainSquare.style.top = "50%";
+                    const unitLength = mainSquare.width.baseVal.value;
+                    mainSquare.style.transform = `translate(${(-2.5 + i) * unitLength}px, ${(-2.5 + j) * unitLength}px)`;
+                    mainSquare.addEventListener("mouseover", () => {
+                        currentMouseCoordinatesOverBoard = [i, j];
+                        debug.innerHTML = currentMouseCoordinatesOverBoard;
+                    });
+                    mainSquare.addEventListener("mouseout", () => {
+                        if (currentMouseCoordinatesOverBoard && currentMouseCoordinatesOverBoard[0] === i && currentMouseCoordinatesOverBoard[1] === j) {
+                            currentMouseCoordinatesOverBoard = null;
+                        } else {
+                            currentMouseCoordinatesOverBoard = [i, j];
+                        }
+                        debug.innerHTML = currentMouseCoordinatesOverBoard;
+                    });
+                    document.body.appendChild(mainSquare);
+                }
+            }
+        </script>
+    </body>
+</html>
