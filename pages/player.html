@@ -5,25 +5,35 @@
         <link rel="stylesheet" href="../styles/style.css"/>
     </head>
     <body>
-        <div id="debug">
-
-        </div>
+        <div id="debug"></div>
         <template id="mainBoardSquareTemplate">
             <svg class="mainBoardSquare" viewBox="0 0 100 100">
                 <path stroke="#AA9" stroke-width="3px" fill="#CCA" d="M0 0H100V100H0Z" />
             </svg>
         </template>
+        <template id="aPawnTemplate">
+            <svg class="aPawn">
+                <path stroke="#933" stroke-width="3px" fill="#F55" d="M20 20H80V80H20Z" />
+            </svg>
+        </template>
+        <template id="bPawnTemplate">
+            <svg class="bPawn">
+                <path stroke="#339" stroke-width="3px" fill="#55F" d="M20 20H80V80H20Z" />
+            </svg>
+        </template>
         <script>
             const debug = document.getElementById("debug");
             const mainBoardSquareTemplate = document.getElementById("mainBoardSquareTemplate");
+            const aPawnTemplate = document.getElementById("aPawnTemplate");
+            const bPawnTemplate = document.getElementById("bPawnTemplate");
             let currentMouseCoordinatesOverBoard = null;
+            let mainBoardUnitLength = null;
             // Create main board
             for (let i = 0; i <= 4; i++) {
                 for (let j = 0; j <= 4; j++) {
                     const mainSquare = mainBoardSquareTemplate.content.cloneNode(true).querySelector(".mainBoardSquare");
-                    mainSquare.style.left = "50%";
-                    mainSquare.style.top = "50%";
                     const unitLength = mainSquare.width.baseVal.value;
+                    if (!mainBoardUnitLength) mainBoardUnitLength = unitLength;
                     mainSquare.style.transform = `translate(${(-2.5 + i) * unitLength}px, ${(-2.5 + j) * unitLength}px)`;
                     mainSquare.addEventListener("mouseover", () => {
                         currentMouseCoordinatesOverBoard = [i, j];
@@ -38,6 +48,28 @@
                         debug.innerHTML = currentMouseCoordinatesOverBoard;
                     });
                     document.body.appendChild(mainSquare);
+                }
+            }
+            // Create the a pieces
+            for (let i = 0; i <= 4; i++) {
+                if (i === 2) {
+
+                } else {
+                    // Make a pawn
+                    const pawn = aPawnTemplate.content.cloneNode(true).querySelector(".aPawn");
+                    pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 4) * mainBoardUnitLength}px)`;
+                    document.body.appendChild(pawn);
+                }
+            }
+            // Create the b pieces
+            for (let i = 0; i <= 4; i++) {
+                if (i === 2) {
+
+                } else {
+                    // Make a pawn
+                    const pawn = bPawnTemplate.content.cloneNode(true).querySelector(".bPawn");
+                    pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 0) * mainBoardUnitLength}px)`;
+                    document.body.appendChild(pawn);
                 }
             }
         </script>
