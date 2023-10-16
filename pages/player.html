@@ -7,8 +7,14 @@
     <body>
         <div id="debug"></div>
         <div id="originDiv"></div>
+        <div id="moveDrawingDiv"></div>
         <template id="mainBoardSquareTemplate">
             <svg class="mainBoardSquare" viewBox="0 0 100 100">
+                <path stroke="#AA9" stroke-width="3px" fill="#FFC" d="M0 0H100V100H0Z" />
+            </svg>
+        </template>
+        <template id="moveDrawingSquareTemplate">
+            <svg class="moveDrawingSquare" viewBox="0 0 100 100">
                 <path stroke="#AA9" stroke-width="3px" fill="#FFC" d="M0 0H100V100H0Z" />
             </svg>
         </template>
@@ -25,13 +31,24 @@
         <script>
             const debug = document.getElementById("debug");
             const originDiv = document.getElementById("originDiv");
+            const moveDrawingDiv = document.getElementById("moveDrawingDiv");
             const mainBoardSquareTemplate = document.getElementById("mainBoardSquareTemplate");
+            const moveDrawingSquareTemplate = document.getElementById("moveDrawingSquareTemplate");
             const aPawnTemplate = document.getElementById("aPawnTemplate");
             const bPawnTemplate = document.getElementById("bPawnTemplate");
             let currentMouseCoordinatesOverBoard = null;
-            let mainBoardUnitLength = null;
+            let mainBoardUnitLength = 100;
+            let moveDrawingSquareUnitLength = 20;
 
             let selectedPiece = null;
+
+            let moveSerialToRelativeMovesMap = {
+                "m0": [],
+                "m1": [],
+                "m2": [],
+                "m3": [],
+                "m4": [],
+            };
 
             document.body.addEventListener("mousemove", (event) => {
                 debug.innerHTML = `${event.clientX - originDiv.offsetLeft}, ${event.clientY - originDiv.offsetTop}`;   
@@ -52,13 +69,41 @@
                 for (let j = 0; j <= 4; j++) {
                     const mainSquare = mainBoardSquareTemplate.content.cloneNode(true).querySelector(".mainBoardSquare");
                     // TODO support Chrome, which fails getting the unitLength as shown below
-                    const unitLength = mainSquare.width.baseVal.value;
-                    if (!mainBoardUnitLength) mainBoardUnitLength = unitLength;
+                    const unitLength = mainBoardUnitLength;
                     mainSquare.style.transform = `translate(${(-2.5 + i) * unitLength}px, ${(-2.5 + j) * unitLength}px)`;
                     mainSquare.id = `mainSquare-${i},${j}`;
                     document.body.appendChild(mainSquare);
                 }
             }
+
+            // Create the move drawing grids
+            for (let k = 0; k <= 4; k++) {
+                for (let i = 0; i <= 4; i++) {
+                    for (let j = 0; j <= 4; j++) {
+                        const moveDrawingSquare = moveDrawingSquareTemplate.content.cloneNode(true).querySelector(".moveDrawingSquare");
+                        // TODO support Chrome, which fails getting the unitLength as shown below
+                        const unitLength = moveDrawingSquareUnitLength;
+                        moveDrawingSquare.style.transform = `translate(${(-2.5 + i) * unitLength}px, ${(2.5 + j + 7 * k) * unitLength}px)`;
+                        moveDrawingSquare.id = `moveDrawingSquare-${k},${i},${j}`;
+                        if (i === 2 && j === 2) {
+                            moveDrawingSquare.querySelector("path").setAttribute("fill", "#333");
+                        } else {
+                            moveDrawingSquare.addEventListener("mousedown", () => {
+                                if (moveSerialToRelativeMovesMap[`m${k}`].includes(`${i-2},${j-2}`)) {
+                                    moveSerialToRelativeMovesMap[`m${k}`].splice(moveSerialToRelativeMovesMap[`m${k}`].indexOf(`${i-2},${j-2}`), 1);
+                                    moveDrawingSquare.querySelector("path").setAttribute("fill", "#FFC");
+                                } else {
+                                    moveSerialToRelativeMovesMap[`m${k}`].push(`${i-2},${j-2}`);
+                                    moveDrawingSquare.querySelector("path").setAttribute("fill", "#77A");
+                                }
+                                console.log(moveSerialToRelativeMovesMap);
+                            });
+                        }
+                        moveDrawingDiv.appendChild(moveDrawingSquare);
+                    }
+                }
+            }
+            
             // Create the a pieces
             for (let i = 0; i <= 4; i++) {
                 if (i === 2) {

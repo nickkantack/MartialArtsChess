@@ -6,6 +6,13 @@
     width: 100px;
     height: 100px;
 }
+.moveDrawingSquare {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+}
 
 .aPawn {
     position: absolute;
@@ -23,6 +30,13 @@
     height: 100px;
 }
 
+#moveDrawingDiv {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 200px;
+    border: 2px solid #f00;
+}
 #originDiv {
     position: absolute;
     left: 50%;
