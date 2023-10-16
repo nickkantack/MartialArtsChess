@@ -1,4 +1,7 @@
-const Game = require("./Game");
+
+try {
+    Game = require("./Game");
+} catch { /* This means we are in the browser. No need to make a fuss about this catch */ }
 
 class MartialArtsChess extends Game {
 
@@ -349,4 +352,6 @@ class MartialArtsChess extends Game {
 
 }
 
-module.exports = MartialArtsChess;
+if (typeof module !== "undefined") {
+    module.exports = MartialArtsChess;
+}

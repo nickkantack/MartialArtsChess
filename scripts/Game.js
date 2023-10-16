@@ -1,5 +1,7 @@
 
-const Base = require("./Base");
+try {
+    Base = require("./Base");
+} catch { /* This means we are in the browser. No need to make a fuss about this catch */ }
 
 class Game {
 
@@ -233,4 +235,6 @@ class Game {
     }
 }
 
-module.exports = Game;
+if (typeof module !== "undefined") {
+    module.exports = Game;
+}

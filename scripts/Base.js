@@ -6,4 +6,6 @@ class Base {
 
 }
 
-module.exports = Base;
+if (typeof module !== "undefined") {
+    module.exports = Base;
+}

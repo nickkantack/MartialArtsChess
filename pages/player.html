@@ -3,8 +3,12 @@
     <head>
         <title>Player</title>
         <link rel="stylesheet" href="../styles/style.css"/>
+        <script src="../scripts/Base.js"></script>
+        <script src="../scripts/Game.js"></script>
+        <script src="../scripts/MartialArtsChess.js"></script>
     </head>
     <body>
+        <button id="commitMoves">Commit moves</button>
         <div id="debug"></div>
         <div id="originDiv"></div>
         <div id="moveDrawingDiv"></div>
@@ -28,6 +32,16 @@
                 <path stroke="#339" stroke-width="3px" fill="#55F" d="M20 20H80V80H20Z" />
             </svg>
         </template>
+        <template id="aGuruTemplate">
+            <svg class="aGuru">
+                <path stroke="#933" stroke-width="3px" fill="#F55" d="M50 20L20 80H80Z" />
+            </svg>
+        </template>
+        <template id="bGuruTemplate">
+            <svg class="bGuru">
+                <path stroke="#339" stroke-width="3px" fill="#55F" d="M50 20L20 80H80Z" />
+            </svg>
+        </template>
         <script>
             const debug = document.getElementById("debug");
             const originDiv = document.getElementById("originDiv");
@@ -36,6 +50,8 @@
             const moveDrawingSquareTemplate = document.getElementById("moveDrawingSquareTemplate");
             const aPawnTemplate = document.getElementById("aPawnTemplate");
             const bPawnTemplate = document.getElementById("bPawnTemplate");
+            const aGuruTemplate = document.getElementById("aGuruTemplate");
+            const bGuruTemplate = document.getElementById("bGuruTemplate");
             let currentMouseCoordinatesOverBoard = null;
             let mainBoardUnitLength = 100;
             let moveDrawingSquareUnitLength = 20;
@@ -49,6 +65,8 @@
                 "m3": [],
                 "m4": [],
             };
+
+            let game = null;
 
             document.body.addEventListener("mousemove", (event) => {
                 debug.innerHTML = `${event.clientX - originDiv.offsetLeft}, ${event.clientY - originDiv.offsetTop}`;   
@@ -107,7 +125,23 @@
             // Create the a pieces
             for (let i = 0; i <= 4; i++) {
                 if (i === 2) {
-
+                    const pawn = aGuruTemplate.content.cloneNode(true).querySelector(".aGuru");
+                    const mainSquare = document.getElementById(`mainSquare-${i},4`);
+                    pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 4) * mainBoardUnitLength}px)`;
+                    pawn.addEventListener("mousedown", (event) => {
+                        selectedPiece = pawn;
+                        let computedSyle = window.getComputedStyle(pawn);
+                        let matrix = new WebKitCSSMatrix(computedSyle.transform);
+                        pawn.style.transform = `translate(${matrix.m41 + event.offsetX - (pawn.getBoundingClientRect().right - pawn.getBoundingClientRect().left) / 2}px, ${matrix.m42 + event.offsetY - (pawn.getBoundingClientRect().bottom - pawn.getBoundingClientRect().top) / 2}px)`;
+                    });
+                    pawn.addEventListener("mouseup", () => {
+                        selectedPiece = null;
+                        let computedSyle = window.getComputedStyle(pawn);
+                        let matrix = new WebKitCSSMatrix(computedSyle.transform);
+                        pawn.style.transform = `translate(${(parseInt(matrix.m41 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px, ${(parseInt(matrix.m42 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px)`;
+                        console.log(`Want to place piece at ${parseInt(matrix.m41 / mainBoardUnitLength + 3)}, ${4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)}`);
+                    });
+                    document.body.appendChild(pawn);
                 } else {
                     // Make a pawn
                     const pawn = aPawnTemplate.content.cloneNode(true).querySelector(".aPawn");
@@ -132,7 +166,23 @@
             // Create the b pieces
             for (let i = 0; i <= 4; i++) {
                 if (i === 2) {
-
+                    const pawn = bGuruTemplate.content.cloneNode(true).querySelector(".bGuru");
+                    const mainSquare = document.getElementById(`mainSquare-${i},4`);
+                    pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 0) * mainBoardUnitLength}px)`;
+                    pawn.addEventListener("mousedown", (event) => {
+                        selectedPiece = pawn;
+                        let computedSyle = window.getComputedStyle(pawn);
+                        let matrix = new WebKitCSSMatrix(computedSyle.transform);
+                        pawn.style.transform = `translate(${matrix.m41 + event.offsetX - (pawn.getBoundingClientRect().right - pawn.getBoundingClientRect().left) / 2}px, ${matrix.m42 + event.offsetY - (pawn.getBoundingClientRect().bottom - pawn.getBoundingClientRect().top) / 2}px)`;
+                    });
+                    pawn.addEventListener("mouseup", () => {
+                        selectedPiece = null;
+                        let computedSyle = window.getComputedStyle(pawn);
+                        let matrix = new WebKitCSSMatrix(computedSyle.transform);
+                        console.log(`Want to place piece at ${parseInt(matrix.m41 / mainBoardUnitLength + 3)}, ${4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)}`);
+                        pawn.style.transform = `translate(${(parseInt(matrix.m41 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px, ${(parseInt(matrix.m42 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px)`;
+                    });
+                    document.body.appendChild(pawn);
                 } else {
                     // Make a pawn
                     const pawn = bPawnTemplate.content.cloneNode(true).querySelector(".bPawn");
@@ -153,6 +203,10 @@
                     });
                     document.body.appendChild(pawn);
                 }
+            }
+
+            function redrawMovesBasedOnCurrentMap() {
+
             }
         </script>
     </body>
