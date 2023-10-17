@@ -52,21 +52,16 @@
             const bPawnTemplate = document.getElementById("bPawnTemplate");
             const aGuruTemplate = document.getElementById("aGuruTemplate");
             const bGuruTemplate = document.getElementById("bGuruTemplate");
+            const commitMovesButton = document.getElementById("commitMoves");
             let currentMouseCoordinatesOverBoard = null;
             let mainBoardUnitLength = 100;
             let moveDrawingSquareUnitLength = 20;
 
             let selectedPiece = null;
 
-            let moveSerialToRelativeMovesMap = {
-                "m0": [],
-                "m1": [],
-                "m2": [],
-                "m3": [],
-                "m4": [],
-            };
-
             let game = null;
+
+            let isLockedIn = false;
 
             document.body.addEventListener("mousemove", (event) => {
                 debug.innerHTML = `${event.clientX - originDiv.offsetLeft}, ${event.clientY - originDiv.offsetTop}`;   
@@ -107,14 +102,11 @@
                             moveDrawingSquare.querySelector("path").setAttribute("fill", "#333");
                         } else {
                             moveDrawingSquare.addEventListener("mousedown", () => {
-                                if (moveSerialToRelativeMovesMap[`m${k}`].includes(`${i-2},${j-2}`)) {
-                                    moveSerialToRelativeMovesMap[`m${k}`].splice(moveSerialToRelativeMovesMap[`m${k}`].indexOf(`${i-2},${j-2}`), 1);
+                                if (moveDrawingSquare.querySelector("path").getAttribute("fill") === "#77A") {
                                     moveDrawingSquare.querySelector("path").setAttribute("fill", "#FFC");
                                 } else {
-                                    moveSerialToRelativeMovesMap[`m${k}`].push(`${i-2},${j-2}`);
                                     moveDrawingSquare.querySelector("path").setAttribute("fill", "#77A");
                                 }
-                                console.log(moveSerialToRelativeMovesMap);
                             });
                         }
                         moveDrawingDiv.appendChild(moveDrawingSquare);
@@ -126,6 +118,7 @@
             for (let i = 0; i <= 4; i++) {
                 if (i === 2) {
                     const pawn = aGuruTemplate.content.cloneNode(true).querySelector(".aGuru");
+                    pawn.id = `a${i}`;
                     const mainSquare = document.getElementById(`mainSquare-${i},4`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 4) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
@@ -145,6 +138,7 @@
                 } else {
                     // Make a pawn
                     const pawn = aPawnTemplate.content.cloneNode(true).querySelector(".aPawn");
+                    pawn.id = `a${i}`;
                     const mainSquare = document.getElementById(`mainSquare-${i},4`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 4) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
@@ -167,6 +161,7 @@
             for (let i = 0; i <= 4; i++) {
                 if (i === 2) {
                     const pawn = bGuruTemplate.content.cloneNode(true).querySelector(".bGuru");
+                    pawn.id = `b${i}`;
                     const mainSquare = document.getElementById(`mainSquare-${i},4`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 0) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
@@ -186,9 +181,10 @@
                 } else {
                     // Make a pawn
                     const pawn = bPawnTemplate.content.cloneNode(true).querySelector(".bPawn");
+                    pawn.id = `b${i}`;
                     const mainSquare = document.getElementById(`mainSquare-${i},0`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 0) * mainBoardUnitLength}px)`;
-                    pawn.addEventListener("mousedown", () => {
+                    pawn.addEventListener("mousedown", (event) => {
                         selectedPiece = pawn;
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
@@ -205,8 +201,78 @@
                 }
             }
 
+            commitMoves.addEventListener("click", () => {
+        
+                if (isLockedIn) {
+                    // Nothing to do
+                } else {
+                    // TODO construct moves from the move svgs
+                    const moveArrayForGameInstantiation = [];
+                    for (let k = 0; k <= 4; k++) {
+                        const relativeMoveArray = [];
+                        for (let i = 0; i <= 4; i++) {
+                            for (let j = 0; j <= 4; j++) {
+                                const svg = document.getElementById(`moveDrawingSquare-${k},${i},${j}`);
+                                if (svg.querySelector("path").getAttribute("fill") === "#77A") {
+                                    relativeMoveArray.push([i - 2, 2 - j]);
+                                }
+                            }
+                        }
+                        moveArrayForGameInstantiation.push(relativeMoveArray);
+                    }
+                    // instantiate the game
+                    game = new MartialArtsChess(moveArrayForGameInstantiation);
+                    applyUiPiecePositionsToGame();
+                }
+                isLockedIn = !isLockedIn;
+
+            });
+
+            function applyUiPiecePositionsToGame() {
+                // First, we need to empty the maps since we'll manually add everything
+                for (let key of Object.keys(game.aSerialToSquareMap)) {
+                    delete game.aSerialToSquareMap[key];
+                }
+                for (let key of Object.keys(game.bSerialToSquareMap)) {
+                    delete game.bSerialToSquareMap[key];
+                }
+                for (let key of Object.keys(game.squareToSerialMap)) {
+                    delete game.squareToSerialMap[key];
+                }
+                for (let i = 0; i <= 4; i++) {
+                    const pieceSerial = `a${i}`;
+                    const aPiece = document.getElementById(pieceSerial);
+                    const boardCoordinates = getSvgPositionAsBoardCoordinates(aPiece);
+                    game.aSerialToSquareMap[pieceSerial] = boardCoordinates;
+                    const boardCoordinatesAsString = `${boardCoordinates[0]},${boardCoordinates[1]}`;
+                    game.squareToSerialMap[boardCoordinatesAsString] = pieceSerial;
+                }
+                for (let i = 0; i <= 4; i++) {
+                    const pieceSerial = `b${i}`;
+                    const bPiece = document.getElementById(pieceSerial);
+                    const boardCoordinates = getSvgPositionAsBoardCoordinates(bPiece);
+                    game.bSerialToSquareMap[pieceSerial] = boardCoordinates;
+                    const boardCoordinatesAsString = `${boardCoordinates[0]},${boardCoordinates[1]}`;
+                    game.squareToSerialMap[boardCoordinatesAsString] = pieceSerial;
+                }
+            }
+
+            function applyGamePiecePositionsToUi() {
+
+            }
+
             function redrawMovesBasedOnCurrentMap() {
 
+            }
+
+            function getSvgPositionAsBoardCoordinates(svg) {
+                let computedSyle = window.getComputedStyle(svg);
+                let matrix = new WebKitCSSMatrix(computedSyle.transform);
+                return [parseInt(matrix.m41 / mainBoardUnitLength + 3), 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)];
+            }
+
+            function getBoardCoordinatesAsSvgTransform(i, j) {
+                return `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + j) * mainBoardUnitLength}px)`;
             }
         </script>
     </body>
