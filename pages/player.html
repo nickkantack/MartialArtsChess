@@ -105,12 +105,27 @@
                         } else {
                             moveDrawingSquare.addEventListener("mousedown", () => {
                                 if (isLockedIn) {
-                                    if (k >= 3) {
-                                        selectedMove = `m${4 - k}`;
-                                        console.log(`Selected move ${selectedMove}`);
-                                    } else {
-                                        console.warn("You are not allowed to select that move as the red player.");
+                                    if (k < 2 && game.playerTurnIndex === 0) {
+                                        console.warn("That move belongs to the blue player, and it's the red player's turn.");
+                                        return;
                                     }
+                                    if (k === 2) {
+                                        console.warn("That move belongs to neither player.");
+                                        return;
+                                    }
+                                    if (k >= 3 && game.playerTurnIndex === 1) {
+                                        console.warn("That move belongs to the red player, and it's the blue player's turn.");
+                                        return;
+                                    }
+                                    // Need to use k as the index in aMoves or bMoves to get the right move
+                                    if (k < 2) {
+                                        if (k === 0) selectedMove = game.bMoves[1];
+                                        if (k === 1) selectedMove = game.bMoves[0];
+                                    } else {
+                                        if (k === 3) selectedMove = game.aMoves[1];
+                                        if (k === 4) selectedMove = game.aMoves[0];
+                                    }
+                                    console.log(`Selected move ${selectedMove}`);
                                 } else {
                                     if (moveDrawingSquare.querySelector("path").getAttribute("fill") === "#77A") {
                                         moveDrawingSquare.querySelector("path").setAttribute("fill", "#FFC");
@@ -138,8 +153,12 @@
                     pawn.id = `${playerIndex ? "b" : "a"}${i}`;
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + (playerIndex ? 0 : 4)) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
-                        if (playerIndex === 1 && isLockedIn) {
-                            console.warn("These are your opponent's pieces which can only be moved in edit mode.");
+                        if (playerIndex === 1 && isLockedIn && pawn.id === "a") {
+                            console.warn("It is the blue player's turn");
+                            return;
+                        }
+                        if (playerIndex === 0 && isLockedIn && pawn.id === "b") {
+                            console.warn("It is the red player's turn");
                             return;
                         }
                         if (isLockedIn && !selectedMove) {
@@ -153,7 +172,10 @@
                         pawn.style.transform = `translate(${matrix.m41 + event.offsetX - (pawn.getBoundingClientRect().right - pawn.getBoundingClientRect().left) / 2}px, ${matrix.m42 + event.offsetY - (pawn.getBoundingClientRect().bottom - pawn.getBoundingClientRect().top) / 2}px)`;
                     });
                     pawn.addEventListener("mouseup", () => {
-                        if (playerIndex && isLockedIn) {
+                        if (playerIndex === 1 && isLockedIn && pawn.id === "a") {
+                            return;
+                        }
+                        if (playerIndex === 0 && isLockedIn && pawn.id === "b") {
                             return;
                         }
                         if (isLockedIn && !selectedMove) {
@@ -169,6 +191,13 @@
                         const destinationCoordinates = [parseInt(matrix.m41 / mainBoardUnitLength + 3), 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)];
                         const destinationCoordinatesAsString = `${destinationCoordinates[0]},${destinationCoordinates[1]}`;
                         const relativeMoveAttempted = [parseInt(matrix.m41 / mainBoardUnitLength + 3) - pieceStartingBoardCoordinates[0], 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3) - pieceStartingBoardCoordinates[1]];
+                        // TODO if the blue player is making the move, reflect the coordinates of the relative move computed above
+                        if (game.playerTurnIndex) {
+                            relativeMoveAttempted[0] *= -1;
+                            relativeMoveAttempted[1] *= -1;
+                        }
+                        console.log(`Relative move attempted was ${relativeMoveAttempted}`);
+                        console.log(`The selected move allows ${game.serialToRelativeMoveMap[selectedMove]}`);
                         let wasRelativeMoveFound = false;
                         for (let relativeMove of game.serialToRelativeMoveMap[selectedMove]) {
                             if (relativeMove[0] === relativeMoveAttempted[0] && relativeMove[1] === relativeMoveAttempted[1]) {
@@ -190,6 +219,7 @@
                                     // Sync the UI with the new game state
                                     redrawMovesBasedOnCurrentMap();
                                     applyGamePiecePositionsToUi();
+                                    selectedMove = null;
                                 } else {
                                     console.warn(`Did not find that in the list of legal moves: ${legalMoves}`);
                                     return;
