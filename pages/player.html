@@ -57,7 +57,9 @@
             let mainBoardUnitLength = 100;
             let moveDrawingSquareUnitLength = 20;
 
+            let pieceStartingBoardCoordinates = null;
             let selectedPiece = null;
+            let selectedMove = null;
 
             let game = null;
 
@@ -102,10 +104,19 @@
                             moveDrawingSquare.querySelector("path").setAttribute("fill", "#333");
                         } else {
                             moveDrawingSquare.addEventListener("mousedown", () => {
-                                if (moveDrawingSquare.querySelector("path").getAttribute("fill") === "#77A") {
-                                    moveDrawingSquare.querySelector("path").setAttribute("fill", "#FFC");
+                                if (isLockedIn) {
+                                    if (k >= 3) {
+                                        selectedMove = `m${4 - k}`;
+                                        console.log(`Selected move ${selectedMove}`);
+                                    } else {
+                                        console.warn("You are not allowed to select that move as the red player.");
+                                    }
                                 } else {
-                                    moveDrawingSquare.querySelector("path").setAttribute("fill", "#77A");
+                                    if (moveDrawingSquare.querySelector("path").getAttribute("fill") === "#77A") {
+                                        moveDrawingSquare.querySelector("path").setAttribute("fill", "#FFC");
+                                    } else {
+                                        moveDrawingSquare.querySelector("path").setAttribute("fill", "#77A");
+                                    }
                                 }
                             });
                         }
@@ -122,17 +133,26 @@
                     const mainSquare = document.getElementById(`mainSquare-${i},4`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 4) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
+                        if (isLockedIn && !selectedMove) {
+                            console.warn("You must select a move before manipulating a piece.");
+                            return;
+                        }
                         selectedPiece = pawn;
+                        pieceStartingBoardCoordinates = getSvgPositionAsBoardCoordinates(pawn);
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
                         pawn.style.transform = `translate(${matrix.m41 + event.offsetX - (pawn.getBoundingClientRect().right - pawn.getBoundingClientRect().left) / 2}px, ${matrix.m42 + event.offsetY - (pawn.getBoundingClientRect().bottom - pawn.getBoundingClientRect().top) / 2}px)`;
                     });
                     pawn.addEventListener("mouseup", () => {
+                        if (isLockedIn && !selectedMove) {
+                            return;
+                        }
                         selectedPiece = null;
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
                         pawn.style.transform = `translate(${(parseInt(matrix.m41 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px, ${(parseInt(matrix.m42 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px)`;
                         console.log(`Want to place piece at ${parseInt(matrix.m41 / mainBoardUnitLength + 3)}, ${4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)}`);
+                        // TODO check if this is a legal move
                     });
                     document.body.appendChild(pawn);
                 } else {
@@ -142,17 +162,43 @@
                     const mainSquare = document.getElementById(`mainSquare-${i},4`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 4) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
+                        if (isLockedIn && !selectedMove) {
+                            console.warn("You must select a move before manipulating a piece.");
+                            return;
+                        }
                         selectedPiece = pawn;
+                        pieceStartingBoardCoordinates = getSvgPositionAsBoardCoordinates(pawn);
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
                         pawn.style.transform = `translate(${matrix.m41 + event.offsetX - (pawn.getBoundingClientRect().right - pawn.getBoundingClientRect().left) / 2}px, ${matrix.m42 + event.offsetY - (pawn.getBoundingClientRect().bottom - pawn.getBoundingClientRect().top) / 2}px)`;
                     });
                     pawn.addEventListener("mouseup", () => {
+                        if (isLockedIn && !selectedMove) {
+                            return;
+                        }
                         selectedPiece = null;
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
                         pawn.style.transform = `translate(${(parseInt(matrix.m41 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px, ${(parseInt(matrix.m42 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px)`;
+                        console.log(`Picked up a piece at ${pieceStartingBoardCoordinates}`);
                         console.log(`Want to place piece at ${parseInt(matrix.m41 / mainBoardUnitLength + 3)}, ${4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)}`);
+                        const destinationCoordinates = [parseInt(matrix.m41 / mainBoardUnitLength + 3), 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)];
+                        const destinationCoordinatesAsString = `${destinationCoordinates[0]},${destinationCoordinates[1]}`;
+                        const relativeMoveAttempted = [parseInt(matrix.m41 / mainBoardUnitLength + 3) - pieceStartingBoardCoordinates[0], 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3) - pieceStartingBoardCoordinates[1]];
+                        let wasRelativeMoveFound = false;
+                        for (let relativeMove of game.serialToRelativeMoveMap[selectedMove]) {
+                            if (relativeMove[0] === relativeMoveAttempted[0] && relativeMove[1] === relativeMoveAttempted[1]) {
+                                wasRelativeMoveFound = true;
+                                const moveString = [pawn.id, selectedMove, game.cMove, relativeMoveAttempted, destinationCoordinates, game.squareToSerialMap[destinationCoordinatesAsString] ? game.squareToSerialMap[destinationCoordinatesAsString] : null];
+                                console.log(`Would submit this turn ${moveString}`);
+                                // TODO make the move string, submit it to the game, then trigger AI move
+                                break;
+                            }
+                        }
+                        if (!wasRelativeMoveFound) {
+                            console.warn("You are not allowed to make that move");
+                            pawn.style.transform = getBoardCoordinatesAsSvgTransform(pieceStartingBoardCoordinates);
+                        }
                     });
                     document.body.appendChild(pawn);
                 }
@@ -165,12 +211,20 @@
                     const mainSquare = document.getElementById(`mainSquare-${i},4`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 0) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
+                        if (isLockedIn) {
+                            console.warn("These are your opponent's pieces which can only be moved in edit mode.");
+                            return;
+                        }
                         selectedPiece = pawn;
+                        pieceStartingBoardCoordinates = getSvgPositionAsBoardCoordinates(pawn);
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
                         pawn.style.transform = `translate(${matrix.m41 + event.offsetX - (pawn.getBoundingClientRect().right - pawn.getBoundingClientRect().left) / 2}px, ${matrix.m42 + event.offsetY - (pawn.getBoundingClientRect().bottom - pawn.getBoundingClientRect().top) / 2}px)`;
                     });
                     pawn.addEventListener("mouseup", () => {
+                        if (isLockedIn) {
+                            return;
+                        }
                         selectedPiece = null;
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
@@ -185,12 +239,20 @@
                     const mainSquare = document.getElementById(`mainSquare-${i},0`);
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + 0) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
+                        if (isLockedIn) {
+                            console.warn("These are your opponent's pieces which can only be moved in edit mode.");
+                            return;
+                        }
                         selectedPiece = pawn;
+                        pieceStartingBoardCoordinates = getSvgPositionAsBoardCoordinates(pawn);
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
                         pawn.style.transform = `translate(${matrix.m41 + event.offsetX - (pawn.getBoundingClientRect().right - pawn.getBoundingClientRect().left) / 2}px, ${matrix.m42 + event.offsetY - (pawn.getBoundingClientRect().bottom - pawn.getBoundingClientRect().top) / 2}px)`;
                     });
                     pawn.addEventListener("mouseup", () => {
+                        if (isLockedIn) {
+                            return;
+                        }
                         selectedPiece = null;
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
@@ -205,6 +267,7 @@
         
                 if (isLockedIn) {
                     // Nothing to do
+                    commitMoves.innerHTML = "Edit game";
                 } else {
                     // TODO construct moves from the move svgs
                     const moveArrayForGameInstantiation = [];
@@ -212,9 +275,17 @@
                         const relativeMoveArray = [];
                         for (let i = 0; i <= 4; i++) {
                             for (let j = 0; j <= 4; j++) {
-                                const svg = document.getElementById(`moveDrawingSquare-${k},${i},${j}`);
+                                const svg = document.getElementById(`moveDrawingSquare-${4 - k},${i},${j}`);
                                 if (svg.querySelector("path").getAttribute("fill") === "#77A") {
-                                    relativeMoveArray.push([i - 2, 2 - j]);
+                                    // We want the center move drawing to be ultimately coded as the cMove, 
+                                    // which means it needs to be last in the constructor arguments. So,
+                                    // once we have iterated up to k === 2 (the cMove), we will start inserting
+                                    // subsequent moves before the cMove so that it is last.
+                                    if (k > 2) {
+                                        relativeMoveArray.splice(2, 0, [i - 2, 2 - j]);
+                                    } else {
+                                        relativeMoveArray.push([i - 2, 2 - j]);
+                                    }
                                 }
                             }
                         }
@@ -223,6 +294,7 @@
                     // instantiate the game
                     game = new MartialArtsChess(moveArrayForGameInstantiation);
                     applyUiPiecePositionsToGame();
+                    commitMoves.innerHTML = "Commit game state";
                 }
                 isLockedIn = !isLockedIn;
 
@@ -243,26 +315,68 @@
                     const pieceSerial = `a${i}`;
                     const aPiece = document.getElementById(pieceSerial);
                     const boardCoordinates = getSvgPositionAsBoardCoordinates(aPiece);
-                    game.aSerialToSquareMap[pieceSerial] = boardCoordinates;
-                    const boardCoordinatesAsString = `${boardCoordinates[0]},${boardCoordinates[1]}`;
-                    game.squareToSerialMap[boardCoordinatesAsString] = pieceSerial;
+                    if (boardCoordinates[0] >= 0 && boardCoordinates[0] <= 4 && boardCoordinates[1] >= 0 && boardCoordinates[1] <= 4) {
+                        game.aSerialToSquareMap[pieceSerial] = boardCoordinates;
+                        const boardCoordinatesAsString = `${boardCoordinates[0]},${boardCoordinates[1]}`;
+                        game.squareToSerialMap[boardCoordinatesAsString] = pieceSerial;
+                    } else {
+                        // Assume the piece is captured because it is off the board
+                    }
                 }
                 for (let i = 0; i <= 4; i++) {
                     const pieceSerial = `b${i}`;
                     const bPiece = document.getElementById(pieceSerial);
                     const boardCoordinates = getSvgPositionAsBoardCoordinates(bPiece);
-                    game.bSerialToSquareMap[pieceSerial] = boardCoordinates;
-                    const boardCoordinatesAsString = `${boardCoordinates[0]},${boardCoordinates[1]}`;
-                    game.squareToSerialMap[boardCoordinatesAsString] = pieceSerial;
+                    if (boardCoordinates[0] >= 0 && boardCoordinates[0] <= 4 && boardCoordinates[1] >= 0 && boardCoordinates[1] <= 4) {
+                        game.bSerialToSquareMap[pieceSerial] = boardCoordinates;
+                        const boardCoordinatesAsString = `${boardCoordinates[0]},${boardCoordinates[1]}`;
+                        game.squareToSerialMap[boardCoordinatesAsString] = pieceSerial;
+                    } else {
+                        // Assume the piece is captured because it is off the board
+                    }
                 }
             }
 
             function applyGamePiecePositionsToUi() {
-
+                for (let i = 0; i <= 4; i++) {
+                    const aPieceSerial = `a${i}`;
+                    const bPieceSerial = `b${i}`;
+                    if (game.aSerialToSquareMap.hasOwnProperty(aPieceSerial)) {
+                        const svg = document.getElementById(aPieceSerial);
+                        svg.style.transform = getBoardCoordinatesAsSvgTransform(game.aSerialToSquareMap[aPieceSerial]);
+                    } else {
+                        // The piece is captured and we'll let it stay wherever it is in the UI
+                    }
+                    if (game.bSerialToSquareMap.hasOwnProperty(bPieceSerial)) {
+                        const svg = document.getElementById(bPieceSerial);
+                        svg.style.transform = getBoardCoordinatesAsSvgTransform(game.bSerialToSquareMap[bPieceSerial]);
+                    } else {
+                        // The piece is captured and we'll let it stay wherever it is in the UI
+                    }
+                }
             }
 
             function redrawMovesBasedOnCurrentMap() {
-
+                // Decolor all of them first
+                for (let square of document.querySelectorAll(".moveDrawingSquare")) {
+                    square.querySelector("path").setAttribute("fill", "#FFC");
+                }
+                let k = 0;
+                for (let move of game.aMoves) {
+                    for (let relativeMove of move) {
+                        document.getElementById(`moveDrawingSquare-${4 - k},${relativeMove[0]},${4 - relativeMove[1]}`).setAttribute("fill", "#77A");
+                    }
+                    k++;
+                }
+                for (let relativeMove of game.cMove) {
+                    document.getElementById(`moveDrawingSquare-${4 - k},${relativeMove[0]},${4 - relativeMove[1]}`).setAttribute("fill", "#77A");
+                }
+                for (let move of game.bMoves) {
+                    for (let relativeMove of move) {
+                        document.getElementById(`moveDrawingSquare-${4 - k},${relativeMove[0]},${4 - relativeMove[1]}`).setAttribute("fill", "#77A");
+                    }
+                    k++;
+                }
             }
 
             function getSvgPositionAsBoardCoordinates(svg) {
