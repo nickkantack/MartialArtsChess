@@ -186,7 +186,10 @@
                                 }
                                 if (didFindMatchingLegalMove) {
                                     console.log("That is a legal move!");
-                                    // TODO submit the move to the game, then trigger follow up actions (like AI move)
+                                    game.makeMove(moveString);
+                                    // Sync the UI with the new game state
+                                    redrawMovesBasedOnCurrentMap();
+                                    applyGamePiecePositionsToUi();
                                 } else {
                                     console.warn(`Did not find that in the list of legal moves: ${legalMoves}`);
                                     return;
@@ -209,7 +212,7 @@
                     // Nothing to do
                     commitMoves.innerHTML = "Edit game";
                 } else {
-                    // TODO construct moves from the move svgs
+                    // construct moves from the move svgs
                     const moveArrayForGameInstantiation = [];
                     for (let k = 0; k <= 4; k++) {
                         const relativeMoveArray = [];
@@ -221,19 +224,21 @@
                                     // which means it needs to be last in the constructor arguments. So,
                                     // once we have iterated up to k === 2 (the cMove), we will start inserting
                                     // subsequent moves before the cMove so that it is last.
-                                    if (k > 2) {
-                                        relativeMoveArray.splice(2, 0, [i - 2, 2 - j]);
-                                    } else {
-                                        relativeMoveArray.push([i - 2, 2 - j]);
-                                    }
+                                    relativeMoveArray.push([i - 2, 2 - j]);
                                 }
                             }
                         }
-                        moveArrayForGameInstantiation.push(relativeMoveArray);
+                        if (k > 2) {
+                            moveArrayForGameInstantiation.splice(k - 1, 0, relativeMoveArray);
+                        } else {
+                            moveArrayForGameInstantiation.push(relativeMoveArray);
+                        }
                     }
                     // instantiate the game
+                    console.log(moveArrayForGameInstantiation);
                     game = new MartialArtsChess(moveArrayForGameInstantiation);
                     applyUiPiecePositionsToGame();
+                    redrawMovesBasedOnCurrentMap();
                     commitMoves.innerHTML = "Commit game state";
                 }
                 isLockedIn = !isLockedIn;
@@ -281,17 +286,19 @@
                 for (let i = 0; i <= 4; i++) {
                     const aPieceSerial = `a${i}`;
                     const bPieceSerial = `b${i}`;
+                    const svgA = document.getElementById(aPieceSerial);
                     if (game.aSerialToSquareMap.hasOwnProperty(aPieceSerial)) {
-                        const svg = document.getElementById(aPieceSerial);
-                        svg.style.transform = getBoardCoordinatesAsSvgTransform(game.aSerialToSquareMap[aPieceSerial]);
+                        svgA.style.transform = getBoardCoordinatesAsSvgTransform(game.aSerialToSquareMap[aPieceSerial]);
                     } else {
-                        // The piece is captured and we'll let it stay wherever it is in the UI
+                        // Move the piece off-board because it is captured
+                        svgA.style.transform = getBoardCoordinatesAsSvgTransform(6, 0);
                     }
+                    const svgB = document.getElementById(bPieceSerial);
                     if (game.bSerialToSquareMap.hasOwnProperty(bPieceSerial)) {
-                        const svg = document.getElementById(bPieceSerial);
-                        svg.style.transform = getBoardCoordinatesAsSvgTransform(game.bSerialToSquareMap[bPieceSerial]);
+                        svgB.style.transform = getBoardCoordinatesAsSvgTransform(game.bSerialToSquareMap[bPieceSerial]);
                     } else {
-                        // The piece is captured and we'll let it stay wherever it is in the UI
+                        // Move the piece off board because it is captured
+                        svgB.style.transform = getBoardCoordinatesAsSvgTransform(6, 4);
                     }
                 }
             }
@@ -299,21 +306,27 @@
             function redrawMovesBasedOnCurrentMap() {
                 // Decolor all of them first
                 for (let square of document.querySelectorAll(".moveDrawingSquare")) {
-                    square.querySelector("path").setAttribute("fill", "#FFC");
+                    if (!/.*2,2$/.test(square.id)) {
+                        square.querySelector("path").setAttribute("fill", "#FFC");
+                    }
                 }
+                console.log(game.aMoves);
+                console.log(game.bMoves);
+                console.log(game.serialToRelativeMoveMap);
                 let k = 0;
                 for (let move of game.aMoves) {
-                    for (let relativeMove of move) {
-                        document.getElementById(`moveDrawingSquare-${4 - k},${relativeMove[0]},${4 - relativeMove[1]}`).setAttribute("fill", "#77A");
+                    for (let relativeMove of game.serialToRelativeMoveMap[move]) {
+                        document.getElementById(`moveDrawingSquare-${4 - k},${2 + relativeMove[0]},${2 - relativeMove[1]}`).querySelector("path").setAttribute("fill", "#77A");
                     }
                     k++;
                 }
-                for (let relativeMove of game.cMove) {
-                    document.getElementById(`moveDrawingSquare-${4 - k},${relativeMove[0]},${4 - relativeMove[1]}`).setAttribute("fill", "#77A");
+                for (let relativeMove of game.serialToRelativeMoveMap[game.cMove]) {
+                    document.getElementById(`moveDrawingSquare-${4 - k},${2 + relativeMove[0]},${2 - relativeMove[1]}`).querySelector("path").setAttribute("fill", "#77A");
                 }
+                k++
                 for (let move of game.bMoves) {
-                    for (let relativeMove of move) {
-                        document.getElementById(`moveDrawingSquare-${4 - k},${relativeMove[0]},${4 - relativeMove[1]}`).setAttribute("fill", "#77A");
+                    for (let relativeMove of game.serialToRelativeMoveMap[move]) {
+                        document.getElementById(`moveDrawingSquare-${4 - k},${2 + relativeMove[0]},${2 - relativeMove[1]}`).querySelector("path").setAttribute("fill", "#77A");
                     }
                     k++;
                 }
@@ -335,7 +348,8 @@
                     moveA[2] === moveB[2] &&
                     moveA[3][0] === moveB[3][0] &&
                     moveA[3][1] === moveB[3][1] &&
-                    moveA[4] === moveB[4];
+                    moveA[4] === moveB[4] &&
+                    moveA.length === moveB.length;
             }
         </script>
     </body>
