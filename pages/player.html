@@ -182,6 +182,7 @@
                         pawn.style.transform = `translate(${(parseInt(matrix.m41 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px, ${(parseInt(matrix.m42 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px)`;
                         console.log(`Picked up a piece at ${pieceStartingBoardCoordinates}`);
                         console.log(`Want to place piece at ${parseInt(matrix.m41 / mainBoardUnitLength + 3)}, ${4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)}`);
+                        if (!isLockedIn) return;
                         const destinationCoordinates = [parseInt(matrix.m41 / mainBoardUnitLength + 3), 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)];
                         const destinationCoordinatesAsString = `${destinationCoordinates[0]},${destinationCoordinates[1]}`;
                         const relativeMoveAttempted = [parseInt(matrix.m41 / mainBoardUnitLength + 3) - pieceStartingBoardCoordinates[0], 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3) - pieceStartingBoardCoordinates[1]];
@@ -189,9 +190,24 @@
                         for (let relativeMove of game.serialToRelativeMoveMap[selectedMove]) {
                             if (relativeMove[0] === relativeMoveAttempted[0] && relativeMove[1] === relativeMoveAttempted[1]) {
                                 wasRelativeMoveFound = true;
-                                const moveString = [pawn.id, selectedMove, game.cMove, relativeMoveAttempted, destinationCoordinates, game.squareToSerialMap[destinationCoordinatesAsString] ? game.squareToSerialMap[destinationCoordinatesAsString] : null];
+                                console.log(game.squareToSerialMap);
+                                const moveString = [pawn.id, selectedMove, game.cMove, relativeMoveAttempted, game.squareToSerialMap[destinationCoordinatesAsString] ? game.squareToSerialMap[destinationCoordinatesAsString] : null];
                                 console.log(`Would submit this turn ${moveString}`);
-                                // TODO make the move string, submit it to the game, then trigger AI move
+                                let legalMoves = game.getMoves();
+                                let didFindMatchingLegalMove = false;
+                                for (let move of legalMoves) {
+                                    if (doMovesMatch(move, moveString)) {
+                                        didFindMatchingLegalMove = true;
+                                        break;
+                                    }
+                                }
+                                if (didFindMatchingLegalMove) {
+                                    console.log("That is a legal move!");
+                                    // TODO submit the move to the game, then trigger follow up actions (like AI move)
+                                } else {
+                                    console.warn(`Did not find that in the list of legal moves: ${legalMoves}`);
+                                    return;
+                                }
                                 break;
                             }
                         }
@@ -387,6 +403,15 @@
 
             function getBoardCoordinatesAsSvgTransform(i, j) {
                 return `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + j) * mainBoardUnitLength}px)`;
+            }
+
+            function doMovesMatch(moveA, moveB) {
+                return moveA[0] === moveB[0] &&
+                    moveA[1] === moveB[1] &&
+                    moveA[2] === moveB[2] &&
+                    moveA[3][0] === moveB[3][0] &&
+                    moveA[3][1] === moveB[3][1] &&
+                    moveA[4] === moveB[4];
             }
         </script>
     </body>
