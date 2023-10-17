@@ -166,16 +166,22 @@
                             return;
                         }
                         selectedPiece = pawn;
+                        // TODO give this piece a higher z index than all other piece svgs so that it's mouseup
+                        // event is the one that fires when it is released.
+                        const dummyEnd = document.createElement("div");
+                        document.body.appendChild(dummyEnd);
+                        document.body.insertBefore(pawn, dummyEnd);
+                        document.body.removeChild(dummyEnd);
                         pieceStartingBoardCoordinates = getSvgPositionAsBoardCoordinates(pawn);
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
                         pawn.style.transform = `translate(${matrix.m41 + event.offsetX - (pawn.getBoundingClientRect().right - pawn.getBoundingClientRect().left) / 2}px, ${matrix.m42 + event.offsetY - (pawn.getBoundingClientRect().bottom - pawn.getBoundingClientRect().top) / 2}px)`;
                     });
                     pawn.addEventListener("mouseup", () => {
-                        if (playerIndex === 1 && isLockedIn && pawn.id === "a") {
+                        if (playerIndex === 1 && isLockedIn && /a/.test(pawn.id)) {
                             return;
                         }
-                        if (playerIndex === 0 && isLockedIn && pawn.id === "b") {
+                        if (playerIndex === 0 && isLockedIn && /b/.test(pawn.id)) {
                             return;
                         }
                         if (isLockedIn && !selectedMove) {
@@ -184,9 +190,24 @@
                         selectedPiece = null;
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
+                        const dropDestinationCoordinates = [parseInt(matrix.m41 / mainBoardUnitLength + 3), 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)];
                         pawn.style.transform = `translate(${(parseInt(matrix.m41 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px, ${(parseInt(matrix.m42 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px)`;
                         console.log(`Picked up a piece at ${pieceStartingBoardCoordinates}`);
-                        console.log(`Want to place piece at ${parseInt(matrix.m41 / mainBoardUnitLength + 3)}, ${4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)}`);
+                        console.log(`Want to place piece at ${dropDestinationCoordinates}`);
+                        // If there is a piece here already, move it off the board
+                        for (let letter of ["a", "b"]) {
+                            for (let i = 0; i <= 4; i++) {
+                                const idOfPotentiallyCapturedPiece = `${letter}${i}`;
+                                if (idOfPotentiallyCapturedPiece === pawn.id) continue;
+                                const potentiallyCapturedSvg = document.getElementById(idOfPotentiallyCapturedPiece);
+                                const coordinates = getSvgPositionAsBoardCoordinates(potentiallyCapturedSvg);
+                                if (coordinates[0] === dropDestinationCoordinates[0] && coordinates[1] === dropDestinationCoordinates[1]) {
+                                    console.log("There was already a piece here, so it is now captured");
+                                    potentiallyCapturedSvg.style.transform = getBoardCoordinatesAsSvgTransform(5, 0);
+                                    break;
+                                }
+                            }
+                        }
                         if (!isLockedIn) return;
                         const destinationCoordinates = [parseInt(matrix.m41 / mainBoardUnitLength + 3), 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)];
                         const destinationCoordinatesAsString = `${destinationCoordinates[0]},${destinationCoordinates[1]}`;
@@ -321,14 +342,14 @@
                         svgA.style.transform = getBoardCoordinatesAsSvgTransform(game.aSerialToSquareMap[aPieceSerial]);
                     } else {
                         // Move the piece off-board because it is captured
-                        svgA.style.transform = getBoardCoordinatesAsSvgTransform(6, 0);
+                        svgA.style.transform = getBoardCoordinatesAsSvgTransform(5, 0);
                     }
                     const svgB = document.getElementById(bPieceSerial);
                     if (game.bSerialToSquareMap.hasOwnProperty(bPieceSerial)) {
                         svgB.style.transform = getBoardCoordinatesAsSvgTransform(game.bSerialToSquareMap[bPieceSerial]);
                     } else {
                         // Move the piece off board because it is captured
-                        svgB.style.transform = getBoardCoordinatesAsSvgTransform(6, 4);
+                        svgB.style.transform = getBoardCoordinatesAsSvgTransform(5, 4);
                     }
                 }
             }
@@ -369,7 +390,7 @@
             }
 
             function getBoardCoordinatesAsSvgTransform(i, j) {
-                return `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + j) * mainBoardUnitLength}px)`;
+                return `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(1.5 - j) * mainBoardUnitLength}px)`;
             }
 
             function doMovesMatch(moveA, moveB) {
