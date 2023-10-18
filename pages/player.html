@@ -240,6 +240,14 @@
                                     // Sync the UI with the new game state
                                     redrawMovesBasedOnCurrentMap();
                                     applyGamePiecePositionsToUi();
+                                    // Schedule print of move suggestion
+                                    setTimeout(() => {
+                                        const bestMoveAndProbability = game.getBestMove();
+                                        const winProbability = bestMoveAndProbability[1];
+                                        const bestMoveString = bestMoveAndProbability[0];
+                                        const moveUsed = bestMoveString[1];
+                                        console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
+                                    }, 0);
                                     selectedMove = null;
                                 } else {
                                     console.warn(`Did not find that in the list of legal moves: ${legalMoves}`);
@@ -288,6 +296,7 @@
                     // instantiate the game
                     console.log(moveArrayForGameInstantiation);
                     game = new MartialArtsChess(moveArrayForGameInstantiation);
+                    game.treeSearchMaxDepth = 6;
                     applyUiPiecePositionsToGame();
                     redrawMovesBasedOnCurrentMap();
                     commitMoves.innerHTML = "Commit game state";
