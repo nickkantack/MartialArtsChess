@@ -56,3 +56,18 @@
     left: 50%;
     top: 50%;
 }
+#moveSuggestionCircle {
+    position: absolute;
+    display: none;
+    left: 50%;
+    top: 50%;
+    pointer-events: none;
+}
+
+#moveSuggestionLine {
+    position: absolute;
+    display: none;
+    left: 50%;
+    top: 50%;
+    pointer-events: none;
+}

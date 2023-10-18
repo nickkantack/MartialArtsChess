@@ -42,6 +42,12 @@
                 <path stroke="#339" stroke-width="3px" fill="#55F" d="M50 20L20 80H80Z" />
             </svg>
         </template>
+        <svg id="moveSuggestionCircle" viewBox="-0.5 -0.5 5 5">
+            <circle cx="3" cy="3" r="0.4" stroke="#55F" stroke-width="0.1" opacity="0.3" />
+        </svg>
+        <svg id="moveSuggestionLine" viewBox="-0.5 -0.5 5 5">
+            <path stroke="#55F" stroke-width="0.1" opacity="0.3" d="M0 0 L3 3"/>
+        </svg>
         <script>
             const debug = document.getElementById("debug");
             const originDiv = document.getElementById("originDiv");
@@ -53,6 +59,8 @@
             const aGuruTemplate = document.getElementById("aGuruTemplate");
             const bGuruTemplate = document.getElementById("bGuruTemplate");
             const commitMovesButton = document.getElementById("commitMoves");
+            const moveSuggestionCircle = document.getElementById("moveSuggestionCircle");
+            const moveSuggestionLine = document.getElementById("moveSuggestionLine");
             let currentMouseCoordinatesOverBoard = null;
             let mainBoardUnitLength = 100;
             let moveDrawingSquareUnitLength = 20;
@@ -87,9 +95,18 @@
                     const unitLength = mainBoardUnitLength;
                     mainSquare.style.transform = `translate(${(-2.5 + i) * unitLength}px, ${(-2.5 + j) * unitLength}px)`;
                     mainSquare.id = `mainSquare-${i},${j}`;
-                    document.body.appendChild(mainSquare);
+                    document.body.insertBefore(mainSquare, moveSuggestionCircle);
                 }
             }
+
+            // Right-size the move suggestion divs
+            moveSuggestionCircle.setAttribute("width", 5 * mainBoardUnitLength);
+            moveSuggestionCircle.setAttribute("width", 5 * mainBoardUnitLength);
+            moveSuggestionCircle.style.transform = `translate(-${2.5 * mainBoardUnitLength}px, -${2.5 * mainBoardUnitLength}px)`;
+            moveSuggestionLine.setAttribute("width", 5 * mainBoardUnitLength);
+            moveSuggestionLine.setAttribute("width", 5 * mainBoardUnitLength);
+            moveSuggestionLine.style.transform = `translate(-${2.5 * mainBoardUnitLength}px, -${2.5 * mainBoardUnitLength}px)`;
+
 
             // Create the move drawing grids
             for (let k = 0; k <= 4; k++) {
@@ -118,13 +135,12 @@
                                         return;
                                     }
                                     // Need to use k as the index in aMoves or bMoves to get the right move
-                                    if (k < 2) {
-                                        if (k === 0) selectedMove = game.bMoves[1];
-                                        if (k === 1) selectedMove = game.bMoves[0];
-                                    } else {
-                                        if (k === 3) selectedMove = game.aMoves[1];
-                                        if (k === 4) selectedMove = game.aMoves[0];
-                                    }
+                                    const reflectedK = 4 - k;
+                                    console.log(`reflectedK: ${reflectedK}`);
+                                    if (reflectedK === 0) selectedMove = game.aMoves[0];
+                                    if (reflectedK === 1) selectedMove = game.aMoves[1];
+                                    if (reflectedK === 3) selectedMove = game.bMoves[1];
+                                    if (reflectedK === 4) selectedMove = game.bMoves[0];
                                     console.log(`Selected move ${selectedMove}`);
                                 } else {
                                     if (moveDrawingSquare.querySelector("path").getAttribute("fill") === "#77A") {
@@ -168,10 +184,7 @@
                         selectedPiece = pawn;
                         // TODO give this piece a higher z index than all other piece svgs so that it's mouseup
                         // event is the one that fires when it is released.
-                        const dummyEnd = document.createElement("div");
-                        document.body.appendChild(dummyEnd);
-                        document.body.insertBefore(pawn, dummyEnd);
-                        document.body.removeChild(dummyEnd);
+                        document.body.insertBefore(pawn, moveSuggestionLine);
                         pieceStartingBoardCoordinates = getSvgPositionAsBoardCoordinates(pawn);
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
@@ -236,6 +249,7 @@
                                 }
                                 if (didFindMatchingLegalMove) {
                                     console.log("That is a legal move!");
+                                    hideMoveAnnotation();
                                     game.makeMove(moveString);
                                     // Sync the UI with the new game state
                                     redrawMovesBasedOnCurrentMap();
@@ -247,6 +261,11 @@
                                         const bestMoveString = bestMoveAndProbability[0];
                                         const moveUsed = bestMoveString[1];
                                         console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
+                                        const startCoordinates = game.playerTurnIndex ? game.bSerialToSquareMap[bestMoveString[0]] : game.aSerialToSquareMap[bestMoveString[0]];
+                                        const relativeMove = bestMoveString[3];
+                                        const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
+                                        const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
+                                        annotateMove(startCoordinates, destinationCoordinates, bestMoveString[1]);
                                     }, 0);
                                     selectedMove = null;
                                 } else {
@@ -261,7 +280,7 @@
                             pawn.style.transform = getBoardCoordinatesAsSvgTransform(pieceStartingBoardCoordinates);
                         }
                     });
-                    document.body.appendChild(pawn);
+                    document.body.insertBefore(pawn, moveSuggestionCircle);
                 }
             }
 
@@ -410,6 +429,23 @@
                     moveA[3][1] === moveB[3][1] &&
                     moveA[4] === moveB[4] &&
                     moveA.length === moveB.length;
+            }
+
+            function annotateMove(startCoordinates, endCoordinates, moveToHighlight) {
+                console.log(`Annotating starting coordinates of ${startCoordinates} and end coordinates of ${endCoordinates}}`);
+                moveSuggestionCircle.style.display = "block";
+                moveSuggestionLine.style.display = "block";
+                const moveSuggestionCirclePath = moveSuggestionCircle.querySelector("circle");
+                const moveSuggestionLinePath = moveSuggestionLine.querySelector("path");
+                moveSuggestionCirclePath.setAttribute("cx", endCoordinates[0]);
+                moveSuggestionCirclePath.setAttribute("cy", 4 - endCoordinates[1]);
+                moveSuggestionLinePath.setAttribute("d", `M${startCoordinates[0]} ${4 - startCoordinates[1]}L${endCoordinates[0]} ${4 - endCoordinates[1]}`);
+                // TODO annotate the move on the left that was used
+            }
+
+            function hideMoveAnnotation() {
+                moveSuggestionCircle.style.display = "none";
+                moveSuggestionLine.style.display = "none";
             }
         </script>
     </body>
