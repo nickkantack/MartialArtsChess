@@ -12,6 +12,12 @@
         <div id="debug"></div>
         <div id="originDiv"></div>
         <div id="moveDrawingDiv">
+            <svg id="yourMoveBox" viewBox="0 0 100 200">
+                <path stroke="#F55" fill="none" stroke-width="5" d="M0 0 H100 V200 H0 Z"/>
+            </svg>
+            <svg id="otherPlayerMoveBox" viewBox="0 0 100 200">
+                <path stroke="#55F" fill="none" stroke-width="5" d="M0 0 H100 V200 H0 Z"/>
+            </svg>
             <svg id="moveSuggestionBox" viewBox="0 0 100 100">
                 <path stroke="#55F" fill="none" stroke-width="15" opacity="0.3" d="M0 0 H100 V100 H0 Z"/>
             </svg>
@@ -111,6 +117,10 @@
             moveSuggestionLine.style.transform = `translate(-${2.5 * mainBoardUnitLength}px, -${2.5 * mainBoardUnitLength}px)`;
             moveSuggestionBox.setAttribute("width", 7 * moveDrawingSquareUnitLength);
             moveSuggestionBox.style.transform = `translate(-${3.5 * moveDrawingSquareUnitLength}px, ${1.5 * moveDrawingSquareUnitLength}px)`;
+            yourMoveBox.setAttribute("width", 7 * moveDrawingSquareUnitLength);
+            yourMoveBox.style.transform = `translate(-${3.5 * moveDrawingSquareUnitLength}px, ${22.5 * moveDrawingSquareUnitLength}px)`;
+            otherPlayerMoveBox.setAttribute("width", 7 * moveDrawingSquareUnitLength);
+            otherPlayerMoveBox.style.transform = `translate(-${3.5 * moveDrawingSquareUnitLength}px, ${1.5 * moveDrawingSquareUnitLength}px)`;
 
 
             // Create the move drawing grids
