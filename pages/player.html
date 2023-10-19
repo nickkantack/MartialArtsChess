@@ -297,7 +297,7 @@
                                         const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
                                         const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
                                         annotateMove(startCoordinates, destinationCoordinates, bestMoveString[1]);
-                                    }, 0);
+                                    }, 25);
                                     selectedMove = null;
                                 } else {
                                     console.warn(`Did not find that in the list of legal moves: ${legalMoves}`);
