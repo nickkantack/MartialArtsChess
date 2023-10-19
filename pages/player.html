@@ -121,6 +121,12 @@
                             moveDrawingSquare.querySelector("path").setAttribute("fill", "#333");
                         } else {
                             moveDrawingSquare.addEventListener("mousedown", () => {
+                                if (game) {
+                                    console.log(`On mousedown moves from game are:`);
+                                    console.log(`game.aMoves: ${game.aMoves}`);
+                                    console.log(`game.cMove: ${game.cMove}`);
+                                    console.log(`game.bMoves: ${game.bMoves}`);
+                                }
                                 if (isLockedIn) {
                                     if (k < 2 && game.playerTurnIndex === 0) {
                                         console.warn("That move belongs to the blue player, and it's the red player's turn.");
@@ -137,10 +143,14 @@
                                     // Need to use k as the index in aMoves or bMoves to get the right move
                                     const reflectedK = 4 - k;
                                     console.log(`reflectedK: ${reflectedK}`);
+                                    console.log(`Right before picking selected move, moves from game are:`);
+                                    console.log(`game.aMoves: ${game.aMoves}`);
+                                    console.log(`game.cMove: ${game.cMove}`);
+                                    console.log(`game.bMoves: ${game.bMoves}`);
                                     if (reflectedK === 0) selectedMove = game.aMoves[0];
                                     if (reflectedK === 1) selectedMove = game.aMoves[1];
-                                    if (reflectedK === 3) selectedMove = game.bMoves[1];
-                                    if (reflectedK === 4) selectedMove = game.bMoves[0];
+                                    if (reflectedK === 3) selectedMove = game.bMoves[0];
+                                    if (reflectedK === 4) selectedMove = game.bMoves[1];
                                     console.log(`Selected move ${selectedMove}`);
                                 } else {
                                     if (moveDrawingSquare.querySelector("path").getAttribute("fill") === "#77A") {
@@ -250,13 +260,29 @@
                                 if (didFindMatchingLegalMove) {
                                     console.log("That is a legal move!");
                                     hideMoveAnnotation();
+                                    console.log(`Right before submitting move, moves from game are:`);
+                                    console.log(`game.aMoves: ${game.aMoves}`);
+                                    console.log(`game.cMove: ${game.cMove}`);
+                                    console.log(`game.bMoves: ${game.bMoves}`);
                                     game.makeMove(moveString);
+                                    console.log(`After making moves, the moves are`);
+                                    console.log(`game.aMoves: ${game.aMoves}`);
+                                    console.log(`game.cMove: ${game.cMove}`);
+                                    console.log(`game.bMoves: ${game.bMoves}`);
                                     // Sync the UI with the new game state
                                     redrawMovesBasedOnCurrentMap();
                                     applyGamePiecePositionsToUi();
                                     // Schedule print of move suggestion
                                     setTimeout(() => {
+                                        console.log(`Right before estimating best move, the moves are`);
+                                        console.log(`game.aMoves: ${game.aMoves}`);
+                                        console.log(`game.cMove: ${game.cMove}`);
+                                        console.log(`game.bMoves: ${game.bMoves}`);
                                         const bestMoveAndProbability = game.getBestMove();
+                                        console.log(`Right after estimating best move, the moves are`);
+                                        console.log(`game.aMoves: ${game.aMoves}`);
+                                        console.log(`game.cMove: ${game.cMove}`);
+                                        console.log(`game.bMoves: ${game.bMoves}`);
                                         const winProbability = bestMoveAndProbability[1];
                                         const bestMoveString = bestMoveAndProbability[0];
                                         const moveUsed = bestMoveString[1];
@@ -284,12 +310,11 @@
                 }
             }
 
-            commitMoves.addEventListener("click", () => {
+            commitMovesButton.addEventListener("click", () => {
         
-                if (isLockedIn) {
+                if (!isLockedIn) {
                     // Nothing to do
-                    commitMoves.innerHTML = "Edit game";
-                } else {
+                    commitMovesButton.innerHTML = "Edit game";
                     // construct moves from the move svgs
                     const moveArrayForGameInstantiation = [];
                     for (let k = 0; k <= 4; k++) {
@@ -318,7 +343,8 @@
                     game.treeSearchMaxDepth = 6;
                     applyUiPiecePositionsToGame();
                     redrawMovesBasedOnCurrentMap();
-                    commitMoves.innerHTML = "Commit game state";
+                } else {
+                    commitMovesButton.innerHTML = "Commit game state";
                 }
                 isLockedIn = !isLockedIn;
 
@@ -383,27 +409,36 @@
             }
 
             function redrawMovesBasedOnCurrentMap() {
+
+                // Just for debug
+                console.log(`aMoves[0] is ${game.aMoves[0]} which has relative moves ${game.serialToRelativeMoveMap[game.aMoves[0]]}`);
+                console.log(`aMoves[1] is ${game.aMoves[1]} which has relative moves ${game.serialToRelativeMoveMap[game.aMoves[1]]}`);
+                console.log(`cMove is ${game.aMoves[0]} which has relative moves ${game.serialToRelativeMoveMap[game.cMove]}`);
+                console.log(`bMoves[0] is ${game.bMoves[0]} which has relative moves ${game.serialToRelativeMoveMap[game.bMoves[0]]}`);
+                console.log(`bMoves[1] is ${game.bMoves[1]} which has relative moves ${game.serialToRelativeMoveMap[game.bMoves[1]]}`);
+
                 // Decolor all of them first
                 for (let square of document.querySelectorAll(".moveDrawingSquare")) {
                     if (!/.*2,2$/.test(square.id)) {
                         square.querySelector("path").setAttribute("fill", "#FFC");
                     }
                 }
-                console.log(game.aMoves);
-                console.log(game.bMoves);
                 console.log(game.serialToRelativeMoveMap);
                 let k = 0;
                 for (let move of game.aMoves) {
+                    console.log(`When moveDrawingSquare first index is ${4-k} I'm drawing move ${move}`);
                     for (let relativeMove of game.serialToRelativeMoveMap[move]) {
                         document.getElementById(`moveDrawingSquare-${4 - k},${2 + relativeMove[0]},${2 - relativeMove[1]}`).querySelector("path").setAttribute("fill", "#77A");
                     }
                     k++;
                 }
                 for (let relativeMove of game.serialToRelativeMoveMap[game.cMove]) {
+                    console.log(`When moveDrawingSquare first index is ${4-k} I'm drawing move ${game.cMove}`);
                     document.getElementById(`moveDrawingSquare-${4 - k},${2 + relativeMove[0]},${2 - relativeMove[1]}`).querySelector("path").setAttribute("fill", "#77A");
                 }
                 k++
                 for (let move of game.bMoves) {
+                    console.log(`When moveDrawingSquare first index is ${4-k} I'm drawing move ${move}`);
                     for (let relativeMove of game.serialToRelativeMoveMap[move]) {
                         document.getElementById(`moveDrawingSquare-${4 - k},${2 + relativeMove[0]},${2 - relativeMove[1]}`).querySelector("path").setAttribute("fill", "#77A");
                     }

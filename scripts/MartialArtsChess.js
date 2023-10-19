@@ -345,6 +345,23 @@ class MartialArtsChess extends Game {
         return (this.getMoves().length === 0) || (this.getWinningPlayerIndex() !== Game.NO_WINNER_PLAYER_INDEX);
     }
 
+    /*
+    Specifically for this game object, the process of playing out game scenarios to calculate the best move
+    involves making changes to this object and then undoing them. This leads to an equivalent but not identical
+    gamestate where the elements of aMoves should be the same original elements but their order may be changed.
+    This wrapper method over the base class getBestMove() allows the aMoves and bMoves from the original game
+    state to be preserved. This leads to a potentially better client experience where game state arrays don't
+    have elements changing order when you call getBestMove();
+    */
+    getBestMove() {
+        const aMovesCopy = [...this.aMoves];
+        const bMovesCopy = [...this.bMoves];
+        const result = super.getBestMove();
+        this.aMoves = aMovesCopy;
+        this.bMoves = bMovesCopy;
+        return result;
+    }
+
     #getSquareAsString(array) {
         if (array.length !== 2) throw new Error(`Cannot convert square array to string since it does not have only two coordinates. Array was ${array}`);
         return `${array[0]},${array[1]}`;
