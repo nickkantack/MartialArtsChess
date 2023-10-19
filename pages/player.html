@@ -10,6 +10,12 @@
     <body>
         <button id="commitMoves">Commit moves</button>
         <div id="debug"></div>
+        <div id="controls">
+            <input type="checkbox" id="showSuggestionsForRed"/>Computer hints for red player</br>
+            <input type="checkbox" id="showSuggestionsForBlue"/>Computer hints for blue player<br/>
+            <div id="userMessage"></div>
+
+        </div>
         <div id="originDiv"></div>
         <div id="moveDrawingDiv">
             <svg id="yourMoveBox" viewBox="0 0 100 200">
@@ -59,6 +65,16 @@
             <path stroke="#55F" stroke-width="0.1" opacity="0.3" d="M0 0 L3 3"/>
         </svg>
         <script>
+
+            const HOW_TO_EDIT_INSTRUCTIONS = `
+                Click on the boxes to the left to create move cards for this game. Then click "Commit moves"
+                in the upper left corner.
+                `;
+            const SELECT_A_MOVE_INSTRUCTIONS_PREPEND = `
+                Select a move from the `;
+            const SELECT_A_MOVE_INSTRUCTIONS_SUFFIX = ` box on the right.`;
+            const MOVE_A_PIECE_INSTRUCTIONS = `Click an drag a piece to its new square to finish this move. Or, select a different move from the left.`;
+
             const debug = document.getElementById("debug");
             const originDiv = document.getElementById("originDiv");
             const moveDrawingDiv = document.getElementById("moveDrawingDiv");
@@ -84,12 +100,14 @@
 
             let isLockedIn = false;
 
+            userMessage.innerHTML = HOW_TO_EDIT_INSTRUCTIONS;
+
             document.body.addEventListener("mousemove", (event) => {
-                debug.innerHTML = `${event.clientX - originDiv.offsetLeft}, ${event.clientY - originDiv.offsetTop}`;   
+                // debug.innerHTML = `${event.clientX - originDiv.offsetLeft}, ${event.clientY - originDiv.offsetTop}`;   
                 if (mainBoardUnitLength) {
                     currentMouseCoordinatesOverBoard = [parseInt((event.clientX - originDiv.offsetLeft) / mainBoardUnitLength + 2.5),
                         -parseInt((event.clientY - originDiv.offsetTop) / mainBoardUnitLength - 2.5)];
-                    debug.innerHTML += `<br/>${currentMouseCoordinatesOverBoard[0]},${currentMouseCoordinatesOverBoard[1]}`;
+                    // debug.innerHTML += `<br/>${currentMouseCoordinatesOverBoard[0]},${currentMouseCoordinatesOverBoard[1]}`;
                 }
                 if (selectedPiece) {
                     let computedSyle = window.getComputedStyle(selectedPiece);

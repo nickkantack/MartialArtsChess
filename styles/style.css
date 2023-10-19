@@ -1,3 +1,6 @@
+body {
+    font-family: Tahoma;
+}
 
 .mainBoardSquare {
     position: absolute;
@@ -44,17 +47,21 @@
     height: 100px;
 }
 
+#controls {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, 0%);
+    background: #AAA;
+    box-sizing: border-box;
+    border: 2px solid #000;
+}
 #moveDrawingDiv {
     position: absolute;
     left: 0;
     top: 0;
     width: 200px;
     border: 2px solid #f00;
-}
-#originDiv {
-    position: absolute;
-    left: 50%;
-    top: 50%;
 }
 #moveSuggestionCircle {
     position: absolute;
@@ -63,7 +70,6 @@
     top: 50%;
     pointer-events: none;
 }
-
 #moveSuggestionLine {
     position: absolute;
     display: none;
@@ -71,7 +77,6 @@
     top: 50%;
     pointer-events: none;
 }
-
 #moveSuggestionBox {
     position: absolute;
     display: none;
@@ -79,16 +84,29 @@
     top: 50%;
     pointer-events: none;
 }
-
-#yourMoveBox {
+#originDiv {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+}
+#otherPlayerMoveBox {
     position: absolute;
     display: block;
     left: 50%;
     top: 50%;
     pointer-events: none;
 }
-
-#otherPlayerMoveBox {
+#userMessage {
+    position: inline;
+    width: 400px;
+    margin: 3px;
+    height: 4em;
+    margin: 4px;
+    border: 3px solid #666;
+    border-radius: 4px;
+    padding: 5px;
+}
+#yourMoveBox {
     position: absolute;
     display: block;
     left: 50%;
