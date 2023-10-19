@@ -71,3 +71,11 @@
     top: 50%;
     pointer-events: none;
 }
+
+#moveSuggestionBox {
+    position: absolute;
+    display: none;
+    left: 50%;
+    top: 50%;
+    pointer-events: none;
+}

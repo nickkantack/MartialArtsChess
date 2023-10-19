@@ -11,7 +11,11 @@
         <button id="commitMoves">Commit moves</button>
         <div id="debug"></div>
         <div id="originDiv"></div>
-        <div id="moveDrawingDiv"></div>
+        <div id="moveDrawingDiv">
+            <svg id="moveSuggestionBox" viewBox="0 0 100 100">
+                <path stroke="#55F" fill="none" stroke-width="15" opacity="0.3" d="M0 0 H100 V100 H0 Z"/>
+            </svg>
+        </div>
         <template id="mainBoardSquareTemplate">
             <svg class="mainBoardSquare" viewBox="0 0 100 100">
                 <path stroke="#AA9" stroke-width="3px" fill="#FFC" d="M0 0H100V100H0Z" />
@@ -61,6 +65,7 @@
             const commitMovesButton = document.getElementById("commitMoves");
             const moveSuggestionCircle = document.getElementById("moveSuggestionCircle");
             const moveSuggestionLine = document.getElementById("moveSuggestionLine");
+            const moveSuggestionBox = document.getElementById("moveSuggestionBox");
             let currentMouseCoordinatesOverBoard = null;
             let mainBoardUnitLength = 100;
             let moveDrawingSquareUnitLength = 20;
@@ -101,11 +106,11 @@
 
             // Right-size the move suggestion divs
             moveSuggestionCircle.setAttribute("width", 5 * mainBoardUnitLength);
-            moveSuggestionCircle.setAttribute("width", 5 * mainBoardUnitLength);
             moveSuggestionCircle.style.transform = `translate(-${2.5 * mainBoardUnitLength}px, -${2.5 * mainBoardUnitLength}px)`;
             moveSuggestionLine.setAttribute("width", 5 * mainBoardUnitLength);
-            moveSuggestionLine.setAttribute("width", 5 * mainBoardUnitLength);
             moveSuggestionLine.style.transform = `translate(-${2.5 * mainBoardUnitLength}px, -${2.5 * mainBoardUnitLength}px)`;
+            moveSuggestionBox.setAttribute("width", 7 * moveDrawingSquareUnitLength);
+            moveSuggestionBox.style.transform = `translate(-${3.5 * moveDrawingSquareUnitLength}px, ${1.5 * moveDrawingSquareUnitLength}px)`;
 
 
             // Create the move drawing grids
@@ -470,17 +475,24 @@
                 console.log(`Annotating starting coordinates of ${startCoordinates} and end coordinates of ${endCoordinates}}`);
                 moveSuggestionCircle.style.display = "block";
                 moveSuggestionLine.style.display = "block";
+                moveSuggestionBox.style.display = "block";
                 const moveSuggestionCirclePath = moveSuggestionCircle.querySelector("circle");
                 const moveSuggestionLinePath = moveSuggestionLine.querySelector("path");
                 moveSuggestionCirclePath.setAttribute("cx", endCoordinates[0]);
                 moveSuggestionCirclePath.setAttribute("cy", 4 - endCoordinates[1]);
                 moveSuggestionLinePath.setAttribute("d", `M${startCoordinates[0]} ${4 - startCoordinates[1]}L${endCoordinates[0]} ${4 - endCoordinates[1]}`);
                 // TODO annotate the move on the left that was used
+                let k = 0;
+                if (game.aMoves.includes(moveToHighlight)) k = 4 - game.aMoves.indexOf(moveToHighlight);
+                if (game.bMoves.includes(moveToHighlight)) k = 1 - game.bMoves.indexOf(moveToHighlight);
+                if (game.cMove === moveToHighlight) k = 3;
+                moveSuggestionBox.style.transform = `translate(-${3.5 * moveDrawingSquareUnitLength}px, ${(1.5 + 7 * k) * moveDrawingSquareUnitLength}px)`;
             }
 
             function hideMoveAnnotation() {
                 moveSuggestionCircle.style.display = "none";
                 moveSuggestionLine.style.display = "none";
+                moveSuggestionBox.style.display = "none";
             }
         </script>
     </body>
