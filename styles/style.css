@@ -46,6 +46,9 @@ body {
     width: 100px;
     height: 100px;
 }
+.playerMoveLabels {
+    font-size: 1em;
+}
 
 #controls {
     position: absolute;
@@ -109,6 +112,13 @@ body {
 #yourMoveBox {
     position: absolute;
     display: block;
+    left: 50%;
+    top: 50%;
+    pointer-events: none;
+}
+#selectedMoveArrow {
+    position: absolute;
+    display: none;
     left: 50%;
     top: 50%;
     pointer-events: none;

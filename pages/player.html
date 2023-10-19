@@ -18,6 +18,9 @@
         </div>
         <div id="originDiv"></div>
         <div id="moveDrawingDiv">
+            <svg id="selectedMoveArrow" viewBox="0 0 100 100">
+                <path stroke="none" fill="#333" d="M0 50 L50 30 V40 H80 V60 H50 V70 Z"/>
+            </svg>
             <svg id="yourMoveBox" viewBox="0 0 100 200">
                 <path stroke="#F55" fill="none" stroke-width="5" d="M0 0 H100 V200 H0 Z"/>
             </svg>
@@ -139,6 +142,8 @@
             yourMoveBox.style.transform = `translate(-${3.5 * moveDrawingSquareUnitLength}px, ${22.5 * moveDrawingSquareUnitLength}px)`;
             otherPlayerMoveBox.setAttribute("width", 7 * moveDrawingSquareUnitLength);
             otherPlayerMoveBox.style.transform = `translate(-${3.5 * moveDrawingSquareUnitLength}px, ${1.5 * moveDrawingSquareUnitLength}px)`;
+            selectedMoveArrow.setAttribute("width", 3 * moveDrawingSquareUnitLength);
+            selectedMoveArrow.style.transform = `translate(${3.5 * moveDrawingSquareUnitLength}px, 0px)`;
 
 
             // Create the move drawing grids
@@ -180,6 +185,8 @@
                                     console.log(`game.aMoves: ${game.aMoves}`);
                                     console.log(`game.cMove: ${game.cMove}`);
                                     console.log(`game.bMoves: ${game.bMoves}`);
+                                    selectedMoveArrow.style.transform = `translate(${3.5 * moveDrawingSquareUnitLength}px, ${(k * 7 + 3.5) * moveDrawingSquareUnitLength}px)`;
+                                    selectedMoveArrow.style.display = "block";
                                     if (reflectedK === 0) selectedMove = game.aMoves[0];
                                     if (reflectedK === 1) selectedMove = game.aMoves[1];
                                     if (reflectedK === 3) selectedMove = game.bMoves[0];
@@ -327,6 +334,7 @@
                                         annotateMove(startCoordinates, destinationCoordinates, bestMoveString[1]);
                                     }, 25);
                                     selectedMove = null;
+                                    selectedMoveArrow.style.display = "none";
                                 } else {
                                     console.warn(`Did not find that in the list of legal moves: ${legalMoves}`);
                                     return;
@@ -348,6 +356,8 @@
                 if (!isLockedIn) {
                     // Nothing to do
                     commitMovesButton.innerHTML = "Edit game";
+                    selectedMoveArrow.style.display = "none";
+                    selectedMove = null;
                     // construct moves from the move svgs
                     const moveArrayForGameInstantiation = [];
                     for (let k = 0; k <= 4; k++) {
