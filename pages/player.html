@@ -219,15 +219,16 @@
                     pawn.id = `${playerIndex ? "b" : "a"}${i}`;
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + (playerIndex ? 0 : 4)) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
-                        if (playerIndex === 1 && isLockedIn && pawn.id === "a") {
-                            console.warn("It is the blue player's turn");
+                        if (game.playerTurnIndex === 1 && isLockedIn && /a/.test(pawn.id)) {
+                            sendMessage("That piece can't move. It is the blue player's turn.");
                             return;
                         }
-                        if (playerIndex === 0 && isLockedIn && pawn.id === "b") {
-                            console.warn("It is the red player's turn");
+                        if (game.playerTurnIndex === 0 && isLockedIn && /b/.test(pawn.id)) {
+                            sendMessage("That piece can't move. It is the red player's turn.");
                             return;
                         }
                         if (isLockedIn && !selectedMove) {
+                            sendMessage("You must select a move before manipulating a piece.");
                             console.warn("You must select a move before manipulating a piece.");
                             return;
                         }
@@ -343,8 +344,8 @@
                             }
                         }
                         if (!wasRelativeMoveFound) {
-                            console.warn("You are not allowed to make that move");
-                            pawn.style.transform = getBoardCoordinatesAsSvgTransform(pieceStartingBoardCoordinates);
+                            sendMessage("You are not allowed to make that move");
+                            pawn.style.transform = getBoardCoordinatesAsSvgTransform(pieceStartingBoardCoordinates[0], pieceStartingBoardCoordinates[1]);
                         }
                     });
                     document.body.insertBefore(pawn, moveSuggestionCircle);
@@ -531,6 +532,20 @@
                 moveSuggestionCircle.style.display = "none";
                 moveSuggestionLine.style.display = "none";
                 moveSuggestionBox.style.display = "none";
+            }
+
+            function sendMessage(messageText) {
+                userMessage.innerHTML = messageText;
+                userMessage.style.background = "#FFF";
+                setTimeout(() => {
+                    userMessage.style.background = "none";
+                    setTimeout(() => {
+                        userMessage.style.background = "#FFF";
+                        setTimeout(() => {
+                            userMessage.style.background = "none";
+                        }, 250);
+                    }, 250);
+                }, 250);
             }
         </script>
     </body>
