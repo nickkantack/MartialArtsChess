@@ -99,6 +99,29 @@ body {
     top: 50%;
     pointer-events: none;
 }
+#redPartOfEvaluationBar {
+    position: absolute;
+    display: block;
+    left: 50%;
+    top: 50%;
+    pointer-events: none;
+}
+#bluePartOfEvaluationBar {
+    position: absolute;
+    display: block;
+    left: 50%;
+    top: 50%;
+    pointer-events: none;
+    transition: 0.5s;
+}
+#blueWinProbabilityText {
+    position: absolute;
+    display: block;
+    left: 50%;
+    top: 50%;
+    height: 100px;
+    pointer-events: none;
+}
 #userMessage {
     position: inline;
     width: 400px;

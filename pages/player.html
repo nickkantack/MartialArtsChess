@@ -61,6 +61,15 @@
                 <path stroke="#339" stroke-width="3px" fill="#55F" d="M50 20L20 80H80Z" />
             </svg>
         </template>
+        <svg id="redPartOfEvaluationBar" viewBox="0 0 100 100">
+            <path stroke="none" fill="#F55" d="M0 0H10 V100 H0 Z"/>
+        </svg>
+        <svg id="bluePartOfEvaluationBar" viewBox="0 0 100 100">
+            <path stroke="none" fill="#55F" d="M0 0H10 V50 H0 Z"/>
+        </svg>
+        <svg id="blueWinProbabilityText" viewBox="0 0 100 100">
+            <text x="0" y="50" style="font: 24px Tahoma; fill: #FFF">50%</text>
+        </svg>
         <svg id="moveSuggestionCircle" viewBox="-0.5 -0.5 5 5">
             <circle cx="3" cy="3" r="0.4" stroke="#55F" stroke-width="0.1" opacity="0.3" />
         </svg>
@@ -160,6 +169,12 @@
             otherPlayerMoveBox.style.transform = `translate(-${3.5 * moveDrawingSquareUnitLength}px, ${1.5 * moveDrawingSquareUnitLength}px)`;
             selectedMoveArrow.setAttribute("width", 3 * moveDrawingSquareUnitLength);
             selectedMoveArrow.style.transform = `translate(${3.5 * moveDrawingSquareUnitLength}px, 0px)`;
+
+            redPartOfEvaluationBar.setAttribute("height", 5 * mainBoardUnitLength);
+            redPartOfEvaluationBar.style.transform = `translate(${4 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
+            bluePartOfEvaluationBar.setAttribute("height", 5 * mainBoardUnitLength);
+            bluePartOfEvaluationBar.style.transform = `translate(${4 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
+            blueWinProbabilityText.style.transform = `translate(${4 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength - 20}px)`;
 
 
             // Create the move drawing grids
@@ -514,6 +529,7 @@
                 const winProbability = bestMoveAndProbability[1];
                 const bestMoveString = bestMoveAndProbability[0];
                 const moveUsed = bestMoveString[1];
+                adjustEvaluationBarToBlueWinProbability(game.playerTurnIndex ? winProbability : 1 - winProbability);
                 console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
                 const startCoordinates = game.playerTurnIndex ? game.bSerialToSquareMap[bestMoveString[0]] : game.aSerialToSquareMap[bestMoveString[0]];
                 const relativeMove = bestMoveString[3];
@@ -558,6 +574,12 @@
                         }, 250);
                     }, 250);
                 }, 250);
+            }
+
+            function adjustEvaluationBarToBlueWinProbability(probability) {
+                console.log(`Blue win probability: ${probability}`);
+                bluePartOfEvaluationBar.querySelector("path").setAttribute("d", `M0 0H10 V${parseInt(probability * 100)} H0 Z`);               
+                blueWinProbabilityText.querySelector("text").innerHTML = `${parseInt(probability * 100)}%`;
             }
         </script>
     </body>
