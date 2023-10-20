@@ -8,7 +8,6 @@
         <script src="../scripts/MartialArtsChess.js"></script>
     </head>
     <body>
-        <button id="commitMoves">Commit moves</button>
         <div id="debug"></div>
         <div id="controls">
             <input type="checkbox" id="showSuggestionsForRed"/>Computer hints for red player</br>
@@ -18,6 +17,7 @@
         </div>
         <div id="originDiv"></div>
         <div id="moveDrawingDiv">
+            <button id="commitMoves">Commit moves</button>
             <svg id="selectedMoveArrow" viewBox="0 0 100 100">
                 <path stroke="none" fill="#333" d="M0 50 L50 30 V40 H80 V60 H50 V70 Z"/>
             </svg>
@@ -530,6 +530,7 @@
             }
 
             function produceComputerSuggestion() {
+                if (game.isGameOver()) return;
                 setTimeout(() => {
                     produceComputerSuggestionKernel(4);   
                     setTimeout(() => {
