@@ -366,4 +366,37 @@ describe("MartialArtsChessTest", function() {
             }
         });
     });
+    describe("Test copy", () => {
+        it("Copy produces a game that recommends same moves", () => {
+            let game = new MartialArtsChess([
+                [[1, -1], [-1, 1], [-2, 0]], // Rabbit
+                [[-1, -1], [1, 1], [2, 0]], // Other rabbit
+                [[1, 0], [0, -1], [0, 1]], // cross one
+                [[-1, -1], [-1, 0], [1, 0], [1, 1]], // snake
+                [[-1, 1], [1, 1], [0, -1]], // Mantis
+            ]);
+            for (let i = 0; i < 30; i++) {
+                while (!game.isGameOver()) {
+                    game.treeSearchMaxDepth = 4;
+                    const goodPlayerMoveAndProb = game.getBestMove();
+                    const copyGame = game.copy();
+                    const copyGoodMoveAndProb = copyGame.getBestMove();
+                    assert.strictEqual(goodPlayerMoveAndProb[0][0], copyGoodMoveAndProb[0][0]);
+                    assert.strictEqual(goodPlayerMoveAndProb[0][1], copyGoodMoveAndProb[0][1]);
+                    assert.strictEqual(goodPlayerMoveAndProb[0][2], copyGoodMoveAndProb[0][2]);
+                    assert.strictEqual(goodPlayerMoveAndProb[0][3][0], copyGoodMoveAndProb[0][3][0]);
+                    assert.strictEqual(goodPlayerMoveAndProb[0][3][1], copyGoodMoveAndProb[0][3][1]);
+                    assert.strict(goodPlayerMoveAndProb[0][3] !== copyGoodMoveAndProb[0][3]);
+                    assert.strictEqual(goodPlayerMoveAndProb[0][4], copyGoodMoveAndProb[0][4]);
+                    game.makeMove(goodPlayerMoveAndProb[0]);
+                    if (!game.isGameOver()) {
+                        game.treeSearchMaxDepth = 2;
+                        const goodPlayerMoveAndProb = game.getBestMove();
+                        game.makeMove(goodPlayerMoveAndProb[0]);
+                    }
+                }
+                assert.strictEqual(game.getWinningPlayerIndex(), 0);
+            }
+        });
+    });
 });

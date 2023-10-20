@@ -81,8 +81,11 @@ class MartialArtsChess extends Game {
     */
     cMove = null;
 
+    moveArrayForGameInstantiation = null;
+
     constructor (relativeMoves) {
         super();
+        this.moveArrayForGameInstantiation = relativeMoves;
         this.reset(relativeMoves);
     }
 
@@ -360,6 +363,42 @@ class MartialArtsChess extends Game {
         this.aMoves = aMovesCopy;
         this.bMoves = bMovesCopy;
         return result;
+    }
+
+    copy() {
+        const dummyGame = new MartialArtsChess(this.moveArrayForGameInstantiation);
+        dummyGame.aMoves = [];
+        dummyGame.aMoves[0] = this.aMoves[0];
+        dummyGame.aMoves[1] = this.aMoves[1];
+        dummyGame.bMoves[0] = this.bMoves[0];
+        dummyGame.bMoves[1] = this.bMoves[1];
+        dummyGame.cMove = this.cMove;
+        dummyGame.squareToSerialMap = {};
+        for (let square of Object.keys(this.squareToSerialMap)) {
+            dummyGame.squareToSerialMap[square] = this.squareToSerialMap[square];
+        }
+        dummyGame.aSerialToSquareMap = {};
+        for (let serial of Object.keys(this.aSerialToSquareMap)) {
+            const square = this.aSerialToSquareMap[serial];
+            dummyGame.aSerialToSquareMap[serial] = [square[0], square[1]];
+        }
+        dummyGame.bSerialToSquareMap = {};
+        for (let serial of Object.keys(this.bSerialToSquareMap)) {
+            const square = this.bSerialToSquareMap[serial];
+            dummyGame.bSerialToSquareMap[serial] = [square[0], square[1]];
+        }
+        dummyGame.serialToRelativeMoveMap = {};
+        for (let move of Object.keys(this.serialToRelativeMoveMap)) {
+            const arrayOfRelativeMoves = this.serialToRelativeMoveMap[move];
+            const arrayForDummyGame = [];
+            for (let relativeMove of arrayOfRelativeMoves) {
+                arrayForDummyGame.push([relativeMove[0], relativeMove[1]]);
+            }
+            dummyGame.serialToRelativeMoveMap[move] = arrayForDummyGame;
+        }
+        dummyGame.playerTurnIndex = this.playerTurnIndex;
+        dummyGame.treeSearchMaxDepth = this.treeSearchMaxDepth;
+        return dummyGame;
     }
 
     #getSquareAsString(array) {

@@ -100,10 +100,19 @@
             let selectedMove = null;
 
             let game = null;
+            let moveArrayForGameInstantiation = [];
 
             let isLockedIn = false;
 
             userMessage.innerHTML = HOW_TO_EDIT_INSTRUCTIONS;
+
+            showSuggestionsForRed.addEventListener("change", () => {
+                if (checked) {
+
+                } else {
+
+                }
+            });
 
             document.body.addEventListener("mousemove", (event) => {
                 // debug.innerHTML = `${event.clientX - originDiv.offsetLeft}, ${event.clientY - originDiv.offsetTop}`;   
@@ -301,38 +310,13 @@
                                 if (didFindMatchingLegalMove) {
                                     console.log("That is a legal move!");
                                     hideMoveAnnotation();
-                                    console.log(`Right before submitting move, moves from game are:`);
-                                    console.log(`game.aMoves: ${game.aMoves}`);
-                                    console.log(`game.cMove: ${game.cMove}`);
-                                    console.log(`game.bMoves: ${game.bMoves}`);
                                     game.makeMove(moveString);
-                                    console.log(`After making moves, the moves are`);
-                                    console.log(`game.aMoves: ${game.aMoves}`);
-                                    console.log(`game.cMove: ${game.cMove}`);
-                                    console.log(`game.bMoves: ${game.bMoves}`);
                                     // Sync the UI with the new game state
                                     redrawMovesBasedOnCurrentMap();
                                     applyGamePiecePositionsToUi();
                                     // Schedule print of move suggestion
                                     setTimeout(() => {
-                                        console.log(`Right before estimating best move, the moves are`);
-                                        console.log(`game.aMoves: ${game.aMoves}`);
-                                        console.log(`game.cMove: ${game.cMove}`);
-                                        console.log(`game.bMoves: ${game.bMoves}`);
-                                        const bestMoveAndProbability = game.getBestMove();
-                                        console.log(`Right after estimating best move, the moves are`);
-                                        console.log(`game.aMoves: ${game.aMoves}`);
-                                        console.log(`game.cMove: ${game.cMove}`);
-                                        console.log(`game.bMoves: ${game.bMoves}`);
-                                        const winProbability = bestMoveAndProbability[1];
-                                        const bestMoveString = bestMoveAndProbability[0];
-                                        const moveUsed = bestMoveString[1];
-                                        console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
-                                        const startCoordinates = game.playerTurnIndex ? game.bSerialToSquareMap[bestMoveString[0]] : game.aSerialToSquareMap[bestMoveString[0]];
-                                        const relativeMove = bestMoveString[3];
-                                        const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
-                                        const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
-                                        annotateMove(startCoordinates, destinationCoordinates, bestMoveString[1]);
+                                        produceComputerSuggestion();
                                     }, 25);
                                     selectedMove = null;
                                     selectedMoveArrow.style.display = "none";
@@ -360,7 +344,7 @@
                     selectedMoveArrow.style.display = "none";
                     selectedMove = null;
                     // construct moves from the move svgs
-                    const moveArrayForGameInstantiation = [];
+                    moveArrayForGameInstantiation = [];
                     for (let k = 0; k <= 4; k++) {
                         const relativeMoveArray = [];
                         for (let i = 0; i <= 4; i++) {
@@ -508,6 +492,22 @@
                     moveA[3][1] === moveB[3][1] &&
                     moveA[4] === moveB[4] &&
                     moveA.length === moveB.length;
+            }
+
+            function produceComputerSuggestion() {
+                // Copy the game so that a fast moving user does not find a game state that is altered
+                // by the computer calculating good moves
+                const dummyGame = game.copy();
+                const bestMoveAndProbability = dummyGame.getBestMove();
+                const winProbability = bestMoveAndProbability[1];
+                const bestMoveString = bestMoveAndProbability[0];
+                const moveUsed = bestMoveString[1];
+                console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
+                const startCoordinates = game.playerTurnIndex ? game.bSerialToSquareMap[bestMoveString[0]] : game.aSerialToSquareMap[bestMoveString[0]];
+                const relativeMove = bestMoveString[3];
+                const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
+                const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
+                annotateMove(startCoordinates, destinationCoordinates, bestMoveString[1]);
             }
 
             function annotateMove(startCoordinates, endCoordinates, moveToHighlight) {
