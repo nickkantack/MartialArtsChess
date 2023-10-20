@@ -115,6 +115,8 @@
 
             userMessage.innerHTML = HOW_TO_EDIT_INSTRUCTIONS;
 
+            showSuggestionsForRed.checked = true;
+            showSuggestionsForBlue.checked = true;
             showSuggestionsForRed.addEventListener("change", () => {
                 if (showSuggestionsForRed.checked && game && game.playerTurnIndex === 0) {
                     produceComputerSuggestion();
@@ -199,14 +201,16 @@
                                 if (isLockedIn) {
                                     if (k < 2 && game.playerTurnIndex === 0) {
                                         console.warn("That move belongs to the blue player, and it's the red player's turn.");
+                                        sendMessage("That move belongs to the blue player, and it's the red player's turn. Click and drag a piece to complete this player's turn, or select a different move from the left.");
                                         return;
                                     }
                                     if (k === 2) {
-                                        console.warn("That move belongs to neither player.");
+                                        sendMessage("That move belongs to neither player, and it's the red player's turn. Click and drag a piece to complete this player's turn, or select a different move from the left.");
                                         return;
                                     }
                                     if (k >= 3 && game.playerTurnIndex === 1) {
                                         console.warn("That move belongs to the red player, and it's the blue player's turn.");
+                                        sendMessage("That move belongs to the red player, and it's the blue player's turn. Click and drag a piece to complete this player's turn, or select a different move from the left.");
                                         return;
                                     }
                                     // Need to use k as the index in aMoves or bMoves to get the right move
@@ -223,6 +227,7 @@
                                     if (reflectedK === 3) selectedMove = game.bMoves[0];
                                     if (reflectedK === 4) selectedMove = game.bMoves[1];
                                     console.log(`Selected move ${selectedMove}`);
+                                    sendMessage("Click and drag a piece to complete this player's turn, or select a different move from the left.");
                                 } else {
                                     if (moveDrawingSquare.querySelector("path").getAttribute("fill") === "#77A") {
                                         moveDrawingSquare.querySelector("path").setAttribute("fill", "#FFC");
@@ -250,11 +255,11 @@
                     pawn.id = `${playerIndex ? "b" : "a"}${i}`;
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + (playerIndex ? 0 : 4)) * mainBoardUnitLength}px)`;
                     pawn.addEventListener("mousedown", (event) => {
-                        if (game.playerTurnIndex === 1 && isLockedIn && /a/.test(pawn.id)) {
+                        if (game && game.playerTurnIndex === 1 && isLockedIn && /a/.test(pawn.id)) {
                             sendMessage("That piece can't move. It is the blue player's turn.");
                             return;
                         }
-                        if (game.playerTurnIndex === 0 && isLockedIn && /b/.test(pawn.id)) {
+                        if (game && game.playerTurnIndex === 0 && isLockedIn && /b/.test(pawn.id)) {
                             sendMessage("That piece can't move. It is the red player's turn.");
                             return;
                         }
@@ -343,6 +348,7 @@
                                         }
                                     }, 25);
                                     selectedMove = null;
+                                    sendMessage("Select a move from the moves on the left.", true);
                                     selectedMoveArrow.style.display = "none";
                                 } else {
                                     console.warn(`Did not find that in the list of legal moves: ${legalMoves}`);
@@ -352,7 +358,7 @@
                             }
                         }
                         if (!wasRelativeMoveFound) {
-                            sendMessage("You are not allowed to make that move");
+                            sendMessage("That piece cannot move there using the move you have selected.");
                             pawn.style.transform = getBoardCoordinatesAsSvgTransform(pieceStartingBoardCoordinates[0], pieceStartingBoardCoordinates[1]);
                         }
                     });
@@ -398,7 +404,9 @@
                     if (game && game.playerTurnIndex === 0 && showSuggestionsForRed.checked) {
                         produceComputerSuggestion();
                     }
+                    sendMessage(`The game is now active. It is the ${(game.playerTurnIndex ? "blue" : "red")} player's turn. Select a move from the ${game.playerTurnIndex ? "blue" : "red"} box on the right.`);
                 } else {
+                    sendMessage("The game is now in edit mode. You can edit moves or change where pieces are on the board. Pieces can be placed off the board to its right.");
                     commitMovesButton.innerHTML = "Commit game state";
                 }
                 isLockedIn = !isLockedIn;
@@ -522,9 +530,22 @@
             }
 
             function produceComputerSuggestion() {
+                setTimeout(() => {
+                    produceComputerSuggestionKernel(4);   
+                    setTimeout(() => {
+                        produceComputerSuggestionKernel(5);
+                        setTimeout(() => {
+                            produceComputerSuggestionKernel(6);
+                        }, 100);
+                    }, 100);
+                }, 100);
+            }
+
+            function produceComputerSuggestionKernel(depth) {
                 // Copy the game so that a fast moving user does not find a game state that is altered
                 // by the computer calculating good moves
                 const dummyGame = game.copy();
+                dummyGame.treeSearchMaxDepth = depth;
                 const bestMoveAndProbability = dummyGame.getBestMove();
                 const winProbability = bestMoveAndProbability[1];
                 const bestMoveString = bestMoveAndProbability[0];
@@ -562,9 +583,10 @@
                 moveSuggestionBox.style.display = "none";
             }
 
-            function sendMessage(messageText) {
+            function sendMessage(messageText, isQuiet) {
                 userMessage.innerHTML = messageText;
                 userMessage.style.background = "#FFF";
+                if (isQuiet) return;
                 setTimeout(() => {
                     userMessage.style.background = "none";
                     setTimeout(() => {
