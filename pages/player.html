@@ -107,10 +107,17 @@
             userMessage.innerHTML = HOW_TO_EDIT_INSTRUCTIONS;
 
             showSuggestionsForRed.addEventListener("change", () => {
-                if (checked) {
-
+                if (showSuggestionsForRed.checked && game && game.playerTurnIndex === 0) {
+                    produceComputerSuggestion();
                 } else {
-
+                    hideMoveAnnotation();
+                }
+            });
+            showSuggestionsForBlue.addEventListener("change", () => {
+                if (showSuggestionsForBlue.checked && game && game.playerTurnIndex === 1) {
+                    produceComputerSuggestion();
+                } else {
+                    hideMoveAnnotation();
                 }
             });
 
@@ -316,7 +323,9 @@
                                     applyGamePiecePositionsToUi();
                                     // Schedule print of move suggestion
                                     setTimeout(() => {
-                                        produceComputerSuggestion();
+                                        if ((game.playerTurnIndex === 0 && showSuggestionsForRed.checked) || (game.playerTurnIndex === 1 && showSuggestionsForBlue.checked)) {
+                                            produceComputerSuggestion();
+                                        }
                                     }, 25);
                                     selectedMove = null;
                                     selectedMoveArrow.style.display = "none";
@@ -371,6 +380,9 @@
                     game.treeSearchMaxDepth = 6;
                     applyUiPiecePositionsToGame();
                     redrawMovesBasedOnCurrentMap();
+                    if (game && game.playerTurnIndex === 0 && showSuggestionsForRed.checked) {
+                        produceComputerSuggestion();
+                    }
                 } else {
                     commitMovesButton.innerHTML = "Commit game state";
                 }
