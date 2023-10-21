@@ -171,6 +171,31 @@ class Game {
         return [bestMove, winProbability];
     }
 
+    async getBestMoveWithAsyncBreak(depthForAsyncBreak, resultHolder) {
+        let maxDepth = this.treeSearchMaxDepth;
+        let indexOfPlayerContemplatingMove = this.playerTurnIndex;
+        let possibleMoves = this.getMoves();
+        if (Object.keys(possibleMoves).length === 0) {
+            console.log("Call to Game.getBestMove() when there are no possible moves to make. Returning default.");
+            return [null, null];
+        }
+        let bestMove = null;
+        let winProbability = -1;
+        for (let i = possibleMoves.length - 1; i >= 0; i--) {
+            let move =possibleMoves[i];
+            this.makeMove(move);
+            let resultHolder = [0];
+            await this.getWinProbabilityKernelWithAsyncBreak(indexOfPlayerContemplatingMove, 1, maxDepth, winProbability, depthForAsyncBreak, resultHolder);
+            let candidateMoveWinProbability = resultHolder[0];
+            if (candidateMoveWinProbability > winProbability) {
+                winProbability = candidateMoveWinProbability;
+                bestMove = move;
+            }
+            this.unmakeMove(move);
+        }
+        resultHolder[0] = [bestMove, winProbability];
+    }
+
     /**
      * This method is used only by {@link getBestMove} and performs the recursive tree search for the best move.
      *
@@ -230,8 +255,77 @@ class Game {
         }
     }
 
+    /**
+     * This method is used only by {@link getBestMove} and performs the recursive tree search for the best move.
+     *
+     * @param playerIndex
+     * @param game
+     * @param depth
+     * @param maxDepth
+     *
+     * @returns the probability of the current player winning the passed in game state
+     */
+    async getWinProbabilityKernelWithAsyncBreak(playerIndex, depth, maxDepth, uncleProbability, depthForAsyncBreak, resultHolder) {
+
+        // console.log("I'm at depth " + depth + " with the current player being " + this.playerTurnIndex + " and the " +
+        //     "player whose win probability we're estimating is " + playerIndex);
+
+        if (this.isGameOver() || depth === maxDepth) {
+            let probabilityOfWinning = 0;
+            let winningPlayerIndex = this.getWinningPlayerIndex();
+            if (winningPlayerIndex === Game.NO_WINNER_PLAYER_INDEX) {
+                // TODO do an error log if the game is over but winningPlayerIndex === Game.NO_WINNER_PLAYER_INDEX, or at 
+                // least a warning log. It's possible the game can end with no winner, but this possibility is 
+                // potentially lost on the value stored in probabilityOfWinning.
+                probabilityOfWinning = this.getEstimatedWinningProbability(playerIndex);
+            }
+            if (winningPlayerIndex === playerIndex) {
+                probabilityOfWinning = 1;
+            }
+            return probabilityOfWinning;
+        } else {
+            // Handle non-max depth recursion
+
+            // Select the min winning probability if player turn isn't player index, otherwise select max
+            let playerIndexBeforeTrialMoves = this.playerTurnIndex;
+            let isAPreferredToB = (a, b) => playerIndex === playerIndexBeforeTrialMoves ? a > b : b > a;
+
+            let possibleMoves = this.getMoves();
+
+            let winningProbability = -1;
+            for (let i = possibleMoves.length - 1; i >= 0; i--) {
+                let move = possibleMoves[i];
+                // If making this move will land at the max depth, then do a "light" makeMove that skips calculating legal
+                // subsequent moves.
+                // TODO consider removing the second argument for this.makeMove since the "light" version
+                // was something specific to the approach taken with Hive.
+                this.makeMove(move, depth === maxDepth - 1);
+                let candidateWinningProbability = this.getWinProbabilityKernel(playerIndex, depth + 1, maxDepth, winningProbability);
+                if (winningProbability === -1 || isAPreferredToB(candidateWinningProbability, winningProbability)) {
+                    winningProbability = candidateWinningProbability;
+                }
+                this.unmakeMove(move);
+                // Alpha beta pruning
+                if (uncleProbability !== -1 && isAPreferredToB(winningProbability, uncleProbability)) {
+                    return winningProbability;
+                }
+                if (depth < depthForAsyncBreak) {
+                    await this.allowUpdate();
+                }
+            }
+            resultHolder[0] = winningProbability;
+        }
+    }
+
     isGameOver() {
         return (this.getMoves().length === 0) || (this.getWinningPlayerIndex() !== Game.NO_WINNER_PLAYER_INDEX);
+    }
+
+    allowUpdate() {
+        console.log("Allowing update");
+        return new Promise((f) => {
+            setTimeout(f, 0);
+        });
     }
 }
 
