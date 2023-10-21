@@ -171,7 +171,7 @@ class Game {
         return [bestMove, winProbability];
     }
 
-    async getBestMoveWithAsyncBreak(depthForAsyncBreak, resultHolder) {
+    async getBestMoveWithAsyncBreak(depthForAsyncBreak, resultHolder, abortChecker) {
         let maxDepth = this.treeSearchMaxDepth;
         let indexOfPlayerContemplatingMove = this.playerTurnIndex;
         let possibleMoves = this.getMoves();
@@ -185,13 +185,18 @@ class Game {
             let move =possibleMoves[i];
             this.makeMove(move);
             let resultHolder = [0];
-            await this.getWinProbabilityKernelWithAsyncBreak(indexOfPlayerContemplatingMove, 1, maxDepth, winProbability, depthForAsyncBreak, resultHolder);
+            await this.getWinProbabilityKernelWithAsyncBreak(indexOfPlayerContemplatingMove, 1, maxDepth, winProbability, depthForAsyncBreak, resultHolder, abortChecker);
             let candidateMoveWinProbability = resultHolder[0];
             if (candidateMoveWinProbability > winProbability) {
                 winProbability = candidateMoveWinProbability;
                 bestMove = move;
             }
             this.unmakeMove(move);
+            if (abortChecker()) break;
+        }
+        if (abortChecker()) {
+            resultHolder[0] = [null, -1];
+            return;
         }
         resultHolder[0] = [bestMove, winProbability];
     }
@@ -265,7 +270,7 @@ class Game {
      *
      * @returns the probability of the current player winning the passed in game state
      */
-    async getWinProbabilityKernelWithAsyncBreak(playerIndex, depth, maxDepth, uncleProbability, depthForAsyncBreak, resultHolder) {
+    async getWinProbabilityKernelWithAsyncBreak(playerIndex, depth, maxDepth, uncleProbability, depthForAsyncBreak, resultHolder, abortChecker) {
 
         // console.log("I'm at depth " + depth + " with the current player being " + this.playerTurnIndex + " and the " +
         //     "player whose win probability we're estimating is " + playerIndex);
@@ -310,6 +315,7 @@ class Game {
                     return winningProbability;
                 }
                 if (depth < depthForAsyncBreak) {
+                    if (abortChecker()) return;
                     await this.allowUpdate();
                 }
             }
@@ -322,7 +328,6 @@ class Game {
     }
 
     allowUpdate() {
-        console.log("Allowing update");
         return new Promise((f) => {
             setTimeout(f, 0);
         });
