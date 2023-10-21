@@ -17,6 +17,8 @@ class Game {
 
     treeSearchMaxDepth = 1;
 
+    millisOfLastUpdateAllowed = 0;
+
     constructor () {
         if (this.constructor === Game) {
             Game.baseClassWarn();
@@ -295,6 +297,13 @@ class Game {
             let playerIndexBeforeTrialMoves = this.playerTurnIndex;
             let isAPreferredToB = (a, b) => playerIndex === playerIndexBeforeTrialMoves ? a > b : b > a;
 
+            const currentMillis = new Date().getTime();
+            if (currentMillis - this.millisOfLastUpdateAllowed > depthForAsyncBreak) {
+                this.millisOfLastUpdateAllowed = currentMillis;
+                if (abortChecker()) return;
+                await this.allowUpdate();
+            }
+
             let possibleMoves = this.getMoves();
 
             let winningProbability = -1;
@@ -313,10 +322,6 @@ class Game {
                 // Alpha beta pruning
                 if (uncleProbability !== -1 && isAPreferredToB(winningProbability, uncleProbability)) {
                     return winningProbability;
-                }
-                if (depth < depthForAsyncBreak) {
-                    if (abortChecker()) return;
-                    await this.allowUpdate();
                 }
             }
             resultHolder[0] = winningProbability;
