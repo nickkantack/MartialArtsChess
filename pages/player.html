@@ -533,21 +533,26 @@
                 if (game.isGameOver()) return;
                 setTimeout(() => {
                     produceComputerSuggestionKernel(4);   
+                    /*
                     setTimeout(() => {
                         produceComputerSuggestionKernel(5);
                         setTimeout(() => {
                             produceComputerSuggestionKernel(6);
                         }, 100);
                     }, 100);
+                    */
                 }, 100);
             }
 
-            function produceComputerSuggestionKernel(depth) {
+            async function produceComputerSuggestionKernel(depth) {
                 // Copy the game so that a fast moving user does not find a game state that is altered
                 // by the computer calculating good moves
                 const dummyGame = game.copy();
                 dummyGame.treeSearchMaxDepth = depth;
-                const bestMoveAndProbability = dummyGame.getBestMove();
+                let resultHolder = [0];
+                await dummyGame.getBestMoveAsync(resultHolder);
+                const bestMoveAndProbability = resultHolder[0];
+                console.log(`bestMoveAndProbability: ${bestMoveAndProbability}`);
                 const winProbability = bestMoveAndProbability[1];
                 const bestMoveString = bestMoveAndProbability[0];
                 const moveUsed = bestMoveString[1];

@@ -17,6 +17,8 @@ class Game {
 
     treeSearchMaxDepth = 1;
 
+    lastRefreshTimeMillis = 0;
+
     constructor () {
         if (this.constructor === Game) {
             Game.baseClassWarn();
@@ -232,8 +234,117 @@ class Game {
         }
     }
 
+    /**
+     * This method performs a tree search with alpha beta pruning to find the best move from the current player's
+     * perspective (i.e. the move in the current list of possible moves that maximizes the current player's probability)
+     * of winning.
+     *
+     * @returns a 2 element array with the first being the best move and the second being the probability of winning.
+     */
+    async getBestMoveAsync(resultHolder) {
+        let maxDepth = this.treeSearchMaxDepth;
+        let indexOfPlayerContemplatingMove = this.playerTurnIndex;
+        let possibleMoves = this.getMoves();
+        if (Object.keys(possibleMoves).length === 0) {
+            console.log("Call to Game.getBestMove() when there are no possible moves to make. Returning default.");
+            return [null, null];
+        }
+        let bestMove = null;
+        let winProbability = -1;
+        for (let i = possibleMoves.length - 1; i >= 0; i--) {
+            let move =possibleMoves[i];
+            this.makeMove(move);
+            let temp = [0];
+            await this.getWinProbabilityKernelAsync(indexOfPlayerContemplatingMove, 1, maxDepth, winProbability, temp);
+            const candidateMoveWinProbability = temp[0];
+            if (candidateMoveWinProbability > winProbability) {
+                winProbability = candidateMoveWinProbability;
+                bestMove = move;
+            }
+            this.unmakeMove(move);
+        }
+        resultHolder[0] = [bestMove, winProbability];
+    }
+
+    /**
+     * This method is used only by {@link getBestMove} and performs the recursive tree search for the best move.
+     *
+     * @param playerIndex
+     * @param game
+     * @param depth
+     * @param maxDepth
+     *
+     * @returns the probability of the current player winning the passed in game state
+     */
+    async getWinProbabilityKernelAsync(playerIndex, depth, maxDepth, uncleProbability, resultHolder) {
+
+        // console.log("I'm at depth " + depth + " with the current player being " + this.playerTurnIndex + " and the " +
+        //     "player whose win probability we're estimating is " + playerIndex);
+
+        if (this.isGameOver() || depth === maxDepth) {
+            let probabilityOfWinning = 0;
+            let winningPlayerIndex = this.getWinningPlayerIndex();
+            if (winningPlayerIndex === Game.NO_WINNER_PLAYER_INDEX) {
+                // TODO do an error log if the game is over but winningPlayerIndex === Game.NO_WINNER_PLAYER_INDEX, or at 
+                // least a warning log. It's possible the game can end with no winner, but this possibility is 
+                // potentially lost on the value stored in probabilityOfWinning.
+                probabilityOfWinning = this.getEstimatedWinningProbability(playerIndex);
+            }
+            if (winningPlayerIndex === playerIndex) {
+                probabilityOfWinning = 1;
+                // Here's a trick to make the algorithm prefer quicker victories
+                probabilityOfWinning += maxDepth - depth;
+            }
+            resultHolder[0] = probabilityOfWinning;
+        } else {
+            // Handle non-max depth recursion
+
+            // Select the min winning probability if player turn isn't player index, otherwise select max
+            let playerIndexBeforeTrialMoves = this.playerTurnIndex;
+            let isAPreferredToB = (a, b) => playerIndex === playerIndexBeforeTrialMoves ? a > b : b > a;
+
+            let possibleMoves = this.getMoves();
+
+            let winningProbability = -1;
+            for (let i = possibleMoves.length - 1; i >= 0; i--) {
+                let move = possibleMoves[i];
+                // If making this move will land at the max depth, then do a "light" makeMove that skips calculating legal
+                // subsequent moves.
+                // TODO consider removing the second argument for this.makeMove since the "light" version
+                // was something specific to the approach taken with Hive.
+                this.makeMove(move, depth === maxDepth - 1);
+                let temp = [0];
+                await this.getWinProbabilityKernelAsync(playerIndex, depth + 1, maxDepth, winningProbability, temp);
+                let candidateWinningProbability = temp[0];
+                if (winningProbability === -1 || isAPreferredToB(candidateWinningProbability, winningProbability)) {
+                    winningProbability = candidateWinningProbability;
+                }
+                this.unmakeMove(move);
+                // Alpha beta pruning
+                if (uncleProbability !== -1 && isAPreferredToB(winningProbability, uncleProbability)) {
+                    return winningProbability;
+                }
+
+                const currentTimeMillis = new Date().getTime();
+                if (currentTimeMillis - this.lastRefreshTimeMillis > 30) {
+                    await this.waitMs(0);
+                    this.lastRefreshTimeMillis = currentTimeMillis;
+                }
+            }
+            resultHolder[0] = winningProbability;
+        }
+    }
+
     isGameOver() {
         return (this.getMoves().length === 0) || (this.getWinningPlayerIndex() !== Game.NO_WINNER_PLAYER_INDEX);
+    }
+
+    waitMs(ms) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve();
+            }, ms);
+        });
     }
 }
 
