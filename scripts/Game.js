@@ -197,6 +197,8 @@ class Game {
             }
             if (winningPlayerIndex === playerIndex) {
                 probabilityOfWinning = 1;
+                // Here's a trick to make the algorithm prefer quicker victories
+                probabilityOfWinning += maxDepth - depth;
             }
             return probabilityOfWinning;
         } else {
