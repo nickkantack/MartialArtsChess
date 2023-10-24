@@ -241,7 +241,7 @@ class Game {
      *
      * @returns a 2 element array with the first being the best move and the second being the probability of winning.
      */
-    async getBestMoveAsync(resultHolder) {
+    async getBestMoveAsync(resultHolder, abortChecker) {
         let maxDepth = this.treeSearchMaxDepth;
         let indexOfPlayerContemplatingMove = this.playerTurnIndex;
         let possibleMoves = this.getMoves();
@@ -255,13 +255,14 @@ class Game {
             let move =possibleMoves[i];
             this.makeMove(move);
             let temp = [0];
-            await this.getWinProbabilityKernelAsync(indexOfPlayerContemplatingMove, 1, maxDepth, winProbability, temp);
+            await this.getWinProbabilityKernelAsync(indexOfPlayerContemplatingMove, 1, maxDepth, winProbability, temp, abortChecker);
             const candidateMoveWinProbability = temp[0];
             if (candidateMoveWinProbability > winProbability) {
                 winProbability = candidateMoveWinProbability;
                 bestMove = move;
             }
             this.unmakeMove(move);
+            if (abortChecker()) return;
         }
         resultHolder[0] = [bestMove, winProbability > 1 ? 1 : winProbability];
     }
@@ -276,7 +277,7 @@ class Game {
      *
      * @returns the probability of the current player winning the passed in game state
      */
-    async getWinProbabilityKernelAsync(playerIndex, depth, maxDepth, uncleProbability, resultHolder) {
+    async getWinProbabilityKernelAsync(playerIndex, depth, maxDepth, uncleProbability, resultHolder, abortChecker) {
 
         // console.log("I'm at depth " + depth + " with the current player being " + this.playerTurnIndex + " and the " +
         //     "player whose win probability we're estimating is " + playerIndex);
@@ -314,7 +315,7 @@ class Game {
                 // was something specific to the approach taken with Hive.
                 this.makeMove(move, depth === maxDepth - 1);
                 let temp = [0];
-                await this.getWinProbabilityKernelAsync(playerIndex, depth + 1, maxDepth, winningProbability, temp);
+                await this.getWinProbabilityKernelAsync(playerIndex, depth + 1, maxDepth, winningProbability, temp, abortChecker);
                 let candidateWinningProbability = temp[0];
                 if (winningProbability === -1 || isAPreferredToB(candidateWinningProbability, winningProbability)) {
                     winningProbability = candidateWinningProbability;
@@ -325,6 +326,8 @@ class Game {
                     resultHolder[0] = winningProbability;
                     return; 
                 }
+
+                if (abortChecker()) return;
 
                 const currentTimeMillis = new Date().getTime();
                 if (currentTimeMillis - this.lastRefreshTimeMillis > 20) {
