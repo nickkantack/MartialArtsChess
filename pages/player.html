@@ -531,39 +531,33 @@
 
             function produceComputerSuggestion() {
                 if (game.isGameOver()) return;
-                let deeperPromise = new Promise((resolve, reject) => {
-                    setTimeout(async function() {
-                        const bestMoveAndProbability = produceComputerSuggestionKernel(6, 4);   
-                        resolve(bestMoveAndProbability);
-                    }, 10);
-                });
                 setTimeout(() => {
-                    deeperPromise.then(
-                        function(bestMoveAndProbability) {
-                            console.log(`bestMoveAndProbability : ${bestMoveAndProbability}`);
-                            const winProbability = bestMoveAndProbability[1];
-                            const bestMoveString = bestMoveAndProbability[0];
-                            const moveUsed = bestMoveString[1];
-                            adjustEvaluationBarToBlueWinProbability(game.playerTurnIndex ? winProbability : 1 - winProbability);
-                            console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
-                            const startCoordinates = game.playerTurnIndex ? game.bSerialToSquareMap[bestMoveString[0]] : game.aSerialToSquareMap[bestMoveString[0]];
-                            const relativeMove = bestMoveString[3];
-                            const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
-                            const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
-                            annotateMove(startCoordinates, destinationCoordinates, bestMoveString[1]);
-                        }, (error) => { console.error(`Got this error from promise: ${error}`); }
-                    );
-                }, 0);
+                    produceComputerSuggestionKernel(4);   
+                    setTimeout(() => {
+                        produceComputerSuggestionKernel(5);
+                        setTimeout(() => {
+                            produceComputerSuggestionKernel(6);
+                        }, 100);
+                    }, 100);
+                }, 100);
             }
 
-            async function produceComputerSuggestionKernel(depth, depthForAsyncBreak) {
+            function produceComputerSuggestionKernel(depth) {
                 // Copy the game so that a fast moving user does not find a game state that is altered
                 // by the computer calculating good moves
                 const dummyGame = game.copy();
                 dummyGame.treeSearchMaxDepth = depth;
-                let bestMoveAndProbability = [0];
-                await dummyGame.getBestMoveWithAsyncBreak(depthForAsyncBreak, bestMoveAndProbability);
-                return bestMoveAndProbability[0];
+                const bestMoveAndProbability = dummyGame.getBestMove();
+                const winProbability = bestMoveAndProbability[1];
+                const bestMoveString = bestMoveAndProbability[0];
+                const moveUsed = bestMoveString[1];
+                adjustEvaluationBarToBlueWinProbability(game.playerTurnIndex ? winProbability : 1 - winProbability);
+                console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
+                const startCoordinates = game.playerTurnIndex ? game.bSerialToSquareMap[bestMoveString[0]] : game.aSerialToSquareMap[bestMoveString[0]];
+                const relativeMove = bestMoveString[3];
+                const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
+                const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
+                annotateMove(startCoordinates, destinationCoordinates, bestMoveString[1]);
             }
 
             function annotateMove(startCoordinates, endCoordinates, moveToHighlight) {
