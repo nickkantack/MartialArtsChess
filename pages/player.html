@@ -133,7 +133,7 @@
                 }
             });
 
-            function mousemove(event) {
+            document.body.addEventListener("mousemove", (event) => {
                 // debug.innerHTML = `${event.clientX - originDiv.offsetLeft}, ${event.clientY - originDiv.offsetTop}`;   
                 if (mainBoardUnitLength) {
                     currentMouseCoordinatesOverBoard = [parseInt((event.clientX - originDiv.offsetLeft) / mainBoardUnitLength + 2.5),
@@ -145,11 +145,6 @@
                     let matrix = new WebKitCSSMatrix(computedSyle.transform);
                     selectedPiece.style.transform = `translate(${matrix.m41 + event.movementX}px, ${matrix.m42 + event.movementY}px)`;
                 }
-            };
-            document.body.addEventListener("mousemove", mousemove);
-            document.body.addEventListener("touchmove", (e) => {
-                e.preventDefault();
-                mousemove(e.touches[0]);
             });
 
             // Create main board
@@ -249,7 +244,7 @@
                     }
                     pawn.id = `${playerIndex ? "b" : "a"}${i}`;
                     pawn.style.transform = `translate(${(-2.5 + i) * mainBoardUnitLength}px, ${(-2.5 + (playerIndex ? 0 : 4)) * mainBoardUnitLength}px)`;
-                    function mousedown(event) {
+                    pawn.addEventListener("mousedown", (event) => {
                         if (game && game.playerTurnIndex === 1 && isLockedIn && /a/.test(pawn.id)) {
                             sendMessage("That piece can't move. It is the blue player's turn.");
                             return;
@@ -271,13 +266,8 @@
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
                         pawn.style.transform = `translate(${matrix.m41 + event.offsetX - (pawn.getBoundingClientRect().right - pawn.getBoundingClientRect().left) / 2}px, ${matrix.m42 + event.offsetY - (pawn.getBoundingClientRect().bottom - pawn.getBoundingClientRect().top) / 2}px)`;
-                    };
-                    pawn.addEventListener("mousedown", mousedown);
-                    pawn.addEventListener("touchstart", (e) => {
-                        e.preventDefault();
-                        mousedown(e.touches[0]);
                     });
-                    function mouseup() {
+                    pawn.addEventListener("mouseup", () => {
                         if (playerIndex === 1 && isLockedIn && /a/.test(pawn.id)) {
                             return;
                         }
@@ -362,12 +352,7 @@
                             sendMessage("That piece cannot move there using the move you have selected.");
                             pawn.style.transform = getBoardCoordinatesAsSvgTransform(pieceStartingBoardCoordinates[0], pieceStartingBoardCoordinates[1]);
                         }
-                    };
-                    pawn.addEventListener("mouseup", mouseup);
-                    pawn.addEventListener("touchend", (e) => {
-                        e.preventDefault();
-                        mouseup();
-                    }); 
+                    });
                     document.body.insertBefore(pawn, moveSuggestionCircle);
                 }
             }
