@@ -531,29 +531,35 @@
 
             function produceComputerSuggestion() {
                 if (game.isGameOver()) return;
-                setTimeout(() => {
-                    produceComputerSuggestionKernel(4);   
-                    setTimeout(() => {
-                        produceComputerSuggestionKernel(5);
-                        setTimeout(() => {
-                            produceComputerSuggestionKernel(6);
+                setTimeout(async () => {
+                    await produceComputerSuggestionKernel(3);   
+                    setTimeout(async () => {
+                        await produceComputerSuggestionKernel(4);
+                        setTimeout(async () => {
+                            await produceComputerSuggestionKernel(5);
                         }, 100);
                     }, 100);
                 }, 100);
             }
 
-            function produceComputerSuggestionKernel(depth) {
+            async function produceComputerSuggestionKernel(depth) {
                 // Copy the game so that a fast moving user does not find a game state that is altered
                 // by the computer calculating good moves
                 const dummyGame = game.copy();
                 dummyGame.treeSearchMaxDepth = depth;
-                const bestMoveAndProbability = dummyGame.getBestMove();
+                let resultHolder = [0];
+                await dummyGame.getBestMoveAsync(resultHolder);
+                const bestMoveAndProbability = resultHolder[0];
+                console.log(`bestMoveAndProbability: ${bestMoveAndProbability}`);
                 const winProbability = bestMoveAndProbability[1];
                 const bestMoveString = bestMoveAndProbability[0];
                 const moveUsed = bestMoveString[1];
                 adjustEvaluationBarToBlueWinProbability(game.playerTurnIndex ? winProbability : 1 - winProbability);
                 console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
                 const startCoordinates = game.playerTurnIndex ? game.bSerialToSquareMap[bestMoveString[0]] : game.aSerialToSquareMap[bestMoveString[0]];
+                if (!startCoordinates) {
+                    console.warn(`bestMoveString is ${bestMoveString}`);
+                }
                 const relativeMove = bestMoveString[3];
                 const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
                 const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
