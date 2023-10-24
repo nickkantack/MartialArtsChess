@@ -193,6 +193,12 @@
                             moveDrawingSquare.querySelector("path").setAttribute("fill", "#333");
                         } else {
                             moveDrawingSquare.addEventListener("mousedown", () => {
+                                if (game) {
+                                    console.log(`On mousedown moves from game are:`);
+                                    console.log(`game.aMoves: ${game.aMoves}`);
+                                    console.log(`game.cMove: ${game.cMove}`);
+                                    console.log(`game.bMoves: ${game.bMoves}`);
+                                }
                                 if (isLockedIn) {
                                     if (k < 2 && game.playerTurnIndex === 0) {
                                         console.warn("That move belongs to the blue player, and it's the red player's turn.");
@@ -210,13 +216,18 @@
                                     }
                                     // Need to use k as the index in aMoves or bMoves to get the right move
                                     const reflectedK = 4 - k;
+                                    console.log(`reflectedK: ${reflectedK}`);
+                                    console.log(`Right before picking selected move, moves from game are:`);
+                                    console.log(`game.aMoves: ${game.aMoves}`);
+                                    console.log(`game.cMove: ${game.cMove}`);
+                                    console.log(`game.bMoves: ${game.bMoves}`);
                                     selectedMoveArrow.style.transform = `translate(${3.5 * moveDrawingSquareUnitLength}px, ${(k * 7 + 3.5) * moveDrawingSquareUnitLength}px)`;
                                     selectedMoveArrow.style.display = "block";
                                     if (reflectedK === 0) selectedMove = game.aMoves[0];
                                     if (reflectedK === 1) selectedMove = game.aMoves[1];
                                     if (reflectedK === 3) selectedMove = game.bMoves[0];
                                     if (reflectedK === 4) selectedMove = game.bMoves[1];
-                                    // console.log(`Selected move ${selectedMove}`);
+                                    console.log(`Selected move ${selectedMove}`);
                                     sendMessage("Click and drag a piece to complete this player's turn, or select a different move from the left.");
                                 } else {
                                     if (moveDrawingSquare.querySelector("path").getAttribute("fill") === "#77A") {
@@ -282,8 +293,8 @@
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
                         const dropDestinationCoordinates = [parseInt(matrix.m41 / mainBoardUnitLength + 3), 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)];
                         pawn.style.transform = `translate(${(parseInt(matrix.m41 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px, ${(parseInt(matrix.m42 / mainBoardUnitLength + 3) - 2.5) * mainBoardUnitLength}px)`;
-                        // console.log(`Picked up a piece at ${pieceStartingBoardCoordinates}`);
-                        // console.log(`Want to place piece at ${dropDestinationCoordinates}`);
+                        console.log(`Picked up a piece at ${pieceStartingBoardCoordinates}`);
+                        console.log(`Want to place piece at ${dropDestinationCoordinates}`);
                         // If there is a piece here already, move it off the board
                         for (let letter of ["a", "b"]) {
                             for (let i = 0; i <= 4; i++) {
@@ -292,7 +303,7 @@
                                 const potentiallyCapturedSvg = document.getElementById(idOfPotentiallyCapturedPiece);
                                 const coordinates = getSvgPositionAsBoardCoordinates(potentiallyCapturedSvg);
                                 if (coordinates[0] === dropDestinationCoordinates[0] && coordinates[1] === dropDestinationCoordinates[1]) {
-                                    // console.log("There was already a piece here, so it is now captured");
+                                    console.log("There was already a piece here, so it is now captured");
                                     potentiallyCapturedSvg.style.transform = getBoardCoordinatesAsSvgTransform(5, 0);
                                     break;
                                 }
@@ -307,15 +318,15 @@
                             relativeMoveAttempted[0] *= -1;
                             relativeMoveAttempted[1] *= -1;
                         }
-                        // console.log(`Relative move attempted was ${relativeMoveAttempted}`);
-                        // console.log(`The selected move allows ${game.serialToRelativeMoveMap[selectedMove]}`);
+                        console.log(`Relative move attempted was ${relativeMoveAttempted}`);
+                        console.log(`The selected move allows ${game.serialToRelativeMoveMap[selectedMove]}`);
                         let wasRelativeMoveFound = false;
                         for (let relativeMove of game.serialToRelativeMoveMap[selectedMove]) {
                             if (relativeMove[0] === relativeMoveAttempted[0] && relativeMove[1] === relativeMoveAttempted[1]) {
                                 wasRelativeMoveFound = true;
-                                // console.log(game.squareToSerialMap);
+                                console.log(game.squareToSerialMap);
                                 const moveString = [pawn.id, selectedMove, game.cMove, relativeMoveAttempted, game.squareToSerialMap[destinationCoordinatesAsString] ? game.squareToSerialMap[destinationCoordinatesAsString] : null];
-                                // console.log(`Would submit this turn ${moveString}`);
+                                console.log(`Would submit this turn ${moveString}`);
                                 let legalMoves = game.getMoves();
                                 let didFindMatchingLegalMove = false;
                                 for (let move of legalMoves) {
@@ -325,7 +336,7 @@
                                     }
                                 }
                                 if (didFindMatchingLegalMove) {
-                                    // console.log("That is a legal move!");
+                                    console.log("That is a legal move!");
                                     moveCount++;
                                     hideMoveAnnotation();
                                     game.makeMove(moveString);
@@ -387,7 +398,7 @@
                         }
                     }
                     // instantiate the game
-                    // console.log(moveArrayForGameInstantiation);
+                    console.log(moveArrayForGameInstantiation);
                     game = new MartialArtsChess(moveArrayForGameInstantiation);
                     game.treeSearchMaxDepth = 6;
                     applyUiPiecePositionsToGame();
@@ -464,28 +475,35 @@
 
             function redrawMovesBasedOnCurrentMap() {
 
+                // Just for debug
+                console.log(`aMoves[0] is ${game.aMoves[0]} which has relative moves ${game.serialToRelativeMoveMap[game.aMoves[0]]}`);
+                console.log(`aMoves[1] is ${game.aMoves[1]} which has relative moves ${game.serialToRelativeMoveMap[game.aMoves[1]]}`);
+                console.log(`cMove is ${game.aMoves[0]} which has relative moves ${game.serialToRelativeMoveMap[game.cMove]}`);
+                console.log(`bMoves[0] is ${game.bMoves[0]} which has relative moves ${game.serialToRelativeMoveMap[game.bMoves[0]]}`);
+                console.log(`bMoves[1] is ${game.bMoves[1]} which has relative moves ${game.serialToRelativeMoveMap[game.bMoves[1]]}`);
+
                 // Decolor all of them first
                 for (let square of document.querySelectorAll(".moveDrawingSquare")) {
                     if (!/.*2,2$/.test(square.id)) {
                         square.querySelector("path").setAttribute("fill", "#FFC");
                     }
                 }
-                // console.log(game.serialToRelativeMoveMap);
+                console.log(game.serialToRelativeMoveMap);
                 let k = 0;
                 for (let move of game.aMoves) {
-                    // console.log(`When moveDrawingSquare first index is ${4-k} I'm drawing move ${move}`);
+                    console.log(`When moveDrawingSquare first index is ${4-k} I'm drawing move ${move}`);
                     for (let relativeMove of game.serialToRelativeMoveMap[move]) {
                         document.getElementById(`moveDrawingSquare-${4 - k},${2 + relativeMove[0]},${2 - relativeMove[1]}`).querySelector("path").setAttribute("fill", "#77A");
                     }
                     k++;
                 }
                 for (let relativeMove of game.serialToRelativeMoveMap[game.cMove]) {
-                    // console.log(`When moveDrawingSquare first index is ${4-k} I'm drawing move ${game.cMove}`);
+                    console.log(`When moveDrawingSquare first index is ${4-k} I'm drawing move ${game.cMove}`);
                     document.getElementById(`moveDrawingSquare-${4 - k},${2 + relativeMove[0]},${2 - relativeMove[1]}`).querySelector("path").setAttribute("fill", "#77A");
                 }
                 k++
                 for (let move of game.bMoves) {
-                    // console.log(`When moveDrawingSquare first index is ${4-k} I'm drawing move ${move}`);
+                    console.log(`When moveDrawingSquare first index is ${4-k} I'm drawing move ${move}`);
                     for (let relativeMove of game.serialToRelativeMoveMap[move]) {
                         document.getElementById(`moveDrawingSquare-${4 - k},${2 + relativeMove[0]},${2 - relativeMove[1]}`).querySelector("path").setAttribute("fill", "#77A");
                     }
@@ -522,7 +540,8 @@
                 const moveCountAtStart = moveCount;
                 let deeperPromise = new Promise((resolve, reject) => {
                     setTimeout(async function() {
-                        const bestMoveAndProbability = produceComputerSuggestionKernel(depth, 30, () => { 
+                        const bestMoveAndProbability = produceComputerSuggestionKernel(depth, 4, () => { 
+                            console.warn(`Comparing ${moveCount} to ${moveCountAtStart}`);
                             return moveCountAtStart !== moveCount; 
                         });   
                         if (bestMoveAndProbability < 0) reject("User has moved on from this game state.");
@@ -532,19 +551,19 @@
                 setTimeout(() => {
                     deeperPromise.then(
                         function(bestMoveAndProbability) {
-                            // console.log(`bestMoveAndProbability : ${bestMoveAndProbability}`);
-                            if (!bestMoveAndProbability[0]) return; // This means the abort checker tripped, so the player has moved on from the game state that was analyzed.
+                            console.log(`bestMoveAndProbability : ${bestMoveAndProbability}`);
+                            if (!bestMoveAndProbability) return; // This means the abort checker tripped, so the player has moved on from the game state that was analyzed.
                             const winProbability = bestMoveAndProbability[1];
                             const bestMoveString = bestMoveAndProbability[0];
                             const moveUsed = bestMoveString[1];
                             adjustEvaluationBarToBlueWinProbability(game.playerTurnIndex ? winProbability : 1 - winProbability);
-                            // console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
+                            console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
                             const startCoordinates = game.playerTurnIndex ? game.bSerialToSquareMap[bestMoveString[0]] : game.aSerialToSquareMap[bestMoveString[0]];
                             const relativeMove = bestMoveString[3];
                             const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
                             const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
                             annotateMove(startCoordinates, destinationCoordinates, bestMoveString[1]);
-                            if (depth < 5) {
+                            if (depth < 6) {
                                 produceComputerSuggestionWithDepth(depth + 1);
                             }
                         }, (error) => { console.error(`Got this error from promise: ${error}`); }
@@ -563,7 +582,7 @@
             }
 
             function annotateMove(startCoordinates, endCoordinates, moveToHighlight) {
-                // console.log(`Annotating starting coordinates of ${startCoordinates} and end coordinates of ${endCoordinates}}`);
+                console.log(`Annotating starting coordinates of ${startCoordinates} and end coordinates of ${endCoordinates}}`);
                 moveSuggestionCircle.style.display = "block";
                 moveSuggestionLine.style.display = "block";
                 moveSuggestionBox.style.display = "block";
@@ -602,7 +621,7 @@
             }
 
             function adjustEvaluationBarToBlueWinProbability(probability) {
-                // console.log(`Blue win probability: ${probability}`);
+                console.log(`Blue win probability: ${probability}`);
                 bluePartOfEvaluationBar.querySelector("path").setAttribute("d", `M0 0H10 V${parseInt(probability * 100)} H0 Z`);               
                 blueWinProbabilityText.querySelector("text").innerHTML = `${parseInt(probability * 100)}%`;
             }
