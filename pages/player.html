@@ -530,14 +530,10 @@
             }
 
             function produceComputerSuggestion() {
-                produceComputerSuggestionWithDepth(3);
-            }
-
-            function produceComputerSuggestionWithDepth(depth) {
                 if (game.isGameOver()) return;
                 let deeperPromise = new Promise((resolve, reject) => {
                     setTimeout(async function() {
-                        const bestMoveAndProbability = produceComputerSuggestionKernel(depth, 4);   
+                        const bestMoveAndProbability = produceComputerSuggestionKernel(6, 4);   
                         resolve(bestMoveAndProbability);
                     }, 10);
                 });
@@ -555,9 +551,6 @@
                             const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
                             const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
                             annotateMove(startCoordinates, destinationCoordinates, bestMoveString[1]);
-                            if (depth < 6) {
-                                produceComputerSuggestionWithDepth(depth + 1);
-                            }
                         }, (error) => { console.error(`Got this error from promise: ${error}`); }
                     );
                 }, 0);
