@@ -109,7 +109,6 @@
             let selectedMove = null;
 
             let game = null;
-            let moveCount = 0;
             let moveArrayForGameInstantiation = [];
 
             let isLockedIn = false;
@@ -337,7 +336,6 @@
                                 }
                                 if (didFindMatchingLegalMove) {
                                     console.log("That is a legal move!");
-                                    moveCount++;
                                     hideMoveAnnotation();
                                     game.makeMove(moveString);
                                     // Sync the UI with the new game state
@@ -537,14 +535,9 @@
 
             function produceComputerSuggestionWithDepth(depth) {
                 if (game.isGameOver()) return;
-                const moveCountAtStart = moveCount;
                 let deeperPromise = new Promise((resolve, reject) => {
                     setTimeout(async function() {
-                        const bestMoveAndProbability = produceComputerSuggestionKernel(depth, 4, () => { 
-                            console.warn(`Comparing ${moveCount} to ${moveCountAtStart}`);
-                            return moveCountAtStart !== moveCount; 
-                        });   
-                        if (bestMoveAndProbability < 0) reject("User has moved on from this game state.");
+                        const bestMoveAndProbability = produceComputerSuggestionKernel(depth, 4);   
                         resolve(bestMoveAndProbability);
                     }, 10);
                 });
@@ -552,7 +545,6 @@
                     deeperPromise.then(
                         function(bestMoveAndProbability) {
                             console.log(`bestMoveAndProbability : ${bestMoveAndProbability}`);
-                            if (!bestMoveAndProbability) return; // This means the abort checker tripped, so the player has moved on from the game state that was analyzed.
                             const winProbability = bestMoveAndProbability[1];
                             const bestMoveString = bestMoveAndProbability[0];
                             const moveUsed = bestMoveString[1];
@@ -571,13 +563,13 @@
                 }, 0);
             }
 
-            async function produceComputerSuggestionKernel(depth, depthForAsyncBreak, abortChecker) {
+            async function produceComputerSuggestionKernel(depth, depthForAsyncBreak) {
                 // Copy the game so that a fast moving user does not find a game state that is altered
                 // by the computer calculating good moves
                 const dummyGame = game.copy();
                 dummyGame.treeSearchMaxDepth = depth;
                 let bestMoveAndProbability = [0];
-                await dummyGame.getBestMoveWithAsyncBreak(depthForAsyncBreak, bestMoveAndProbability, abortChecker);
+                await dummyGame.getBestMoveWithAsyncBreak(depthForAsyncBreak, bestMoveAndProbability);
                 return bestMoveAndProbability[0];
             }
 
