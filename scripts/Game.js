@@ -263,7 +263,7 @@ class Game {
             }
             this.unmakeMove(move);
         }
-        resultHolder[0] = [bestMove, winProbability];
+        resultHolder[0] = [bestMove, winProbability > 1 ? 1 : winProbability];
     }
 
     /**
@@ -322,11 +322,12 @@ class Game {
                 this.unmakeMove(move);
                 // Alpha beta pruning
                 if (uncleProbability !== -1 && isAPreferredToB(winningProbability, uncleProbability)) {
-                    return winningProbability;
+                    resultHolder[0] = winningProbability;
+                    return; 
                 }
 
                 const currentTimeMillis = new Date().getTime();
-                if (currentTimeMillis - this.lastRefreshTimeMillis > 30) {
+                if (currentTimeMillis - this.lastRefreshTimeMillis > 20) {
                     await this.waitMs(0);
                     this.lastRefreshTimeMillis = currentTimeMillis;
                 }

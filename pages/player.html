@@ -531,16 +531,14 @@
 
             function produceComputerSuggestion() {
                 if (game.isGameOver()) return;
-                setTimeout(() => {
-                    produceComputerSuggestionKernel(4);   
-                    /*
-                    setTimeout(() => {
-                        produceComputerSuggestionKernel(5);
-                        setTimeout(() => {
-                            produceComputerSuggestionKernel(6);
+                setTimeout(async () => {
+                    await produceComputerSuggestionKernel(3);   
+                    setTimeout(async () => {
+                        await produceComputerSuggestionKernel(4);
+                        setTimeout(async () => {
+                            await produceComputerSuggestionKernel(5);
                         }, 100);
                     }, 100);
-                    */
                 }, 100);
             }
 
@@ -559,6 +557,9 @@
                 adjustEvaluationBarToBlueWinProbability(game.playerTurnIndex ? winProbability : 1 - winProbability);
                 console.log(`Player to move has ${winProbability} win probability and should do ${bestMoveString} using ${moveUsed} which is the one with relative moves ${game.serialToRelativeMoveMap[moveUsed]}`);
                 const startCoordinates = game.playerTurnIndex ? game.bSerialToSquareMap[bestMoveString[0]] : game.aSerialToSquareMap[bestMoveString[0]];
+                if (!startCoordinates) {
+                    console.warn(`bestMoveString is ${bestMoveString}`);
+                }
                 const relativeMove = bestMoveString[3];
                 const reflectionMultiplier = game.playerTurnIndex ? -1 : 1;
                 const destinationCoordinates = [startCoordinates[0] + reflectionMultiplier * relativeMove[0], startCoordinates[1] + reflectionMultiplier * relativeMove[1]];
