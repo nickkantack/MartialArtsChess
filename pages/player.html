@@ -296,6 +296,7 @@
                         console.log(`Picked up a piece at ${pieceStartingBoardCoordinates}`);
                         console.log(`Want to place piece at ${dropDestinationCoordinates}`);
                         // If there is a piece here already, move it off the board
+                        let capturedSvg = null;
                         for (let letter of ["a", "b"]) {
                             for (let i = 0; i <= 4; i++) {
                                 const idOfPotentiallyCapturedPiece = `${letter}${i}`;
@@ -303,13 +304,21 @@
                                 const potentiallyCapturedSvg = document.getElementById(idOfPotentiallyCapturedPiece);
                                 const coordinates = getSvgPositionAsBoardCoordinates(potentiallyCapturedSvg);
                                 if (coordinates[0] === dropDestinationCoordinates[0] && coordinates[1] === dropDestinationCoordinates[1]) {
-                                    console.log("There was already a piece here, so it is now captured");
-                                    potentiallyCapturedSvg.style.transform = getBoardCoordinatesAsSvgTransform(5, 0);
+                                    // There is a piece in the destination square. We can't capture it yet, because
+                                    // we aren't sure that this is a legal move. Later we'll check if the board is
+                                    // being edited or if this is a legal move, and in either case we'll complete the
+                                    // capture.
+                                    capturedSvg = potentiallyCapturedSvg;
                                     break;
                                 }
                             }
                         }
-                        if (!isLockedIn) return;
+                        if (!isLockedIn) {
+                            // Since the board is being edited, we can skip checking if the move was legal and just
+                            // remove the covered piece from the board.
+                            if (capturedSvg) capturedSvg.style.transform = getBoardCoordinatesAsSvgTransform(5, 0);
+                            return;
+                        };
                         const destinationCoordinates = [parseInt(matrix.m41 / mainBoardUnitLength + 3), 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3)];
                         const destinationCoordinatesAsString = `${destinationCoordinates[0]},${destinationCoordinates[1]}`;
                         const relativeMoveAttempted = [parseInt(matrix.m41 / mainBoardUnitLength + 3) - pieceStartingBoardCoordinates[0], 4 - parseInt(matrix.m42 / mainBoardUnitLength + 3) - pieceStartingBoardCoordinates[1]];
@@ -338,6 +347,7 @@
                                 if (didFindMatchingLegalMove) {
                                     console.log("That is a legal move!");
                                     moveCount[0]++;
+                                    if (capturedSvg) capturedSvg.style.transform = getBoardCoordinatesAsSvgTransform(5, 0);
                                     hideMoveAnnotation();
                                     game.makeMove(moveString);
                                     // Sync the UI with the new game state
