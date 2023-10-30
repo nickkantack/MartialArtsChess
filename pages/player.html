@@ -297,6 +297,7 @@
                             console.warn("You must select a move before manipulating a piece.");
                             return;
                         }
+                        previousTouch = null;
                         selectedPiece = pawn;
                         // TODO give this piece a higher z index than all other piece svgs so that it's mouseup
                         // event is the one that fires when it is released.
@@ -312,7 +313,6 @@
                         mousedown(event.touches[0]);
                     });
                     function mouseup(event) {
-                        previousTouch = null;
                         if (playerIndex === 1 && isLockedIn && /a/.test(pawn.id)) {
                             return;
                         }
