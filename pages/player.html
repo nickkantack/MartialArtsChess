@@ -61,11 +61,11 @@
                 <path stroke="#339" stroke-width="3px" fill="#55F" d="M50 20L20 80H80Z" />
             </svg>
         </template>
-        <svg id="redPartOfEvaluationBar" viewBox="0 0 100 100">
-            <path stroke="none" fill="#F55" d="M0 0H10 V100 H0 Z"/>
+        <svg id="redPartOfEvaluationBar" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path stroke="none" fill="#F55" d="M0 0H100 V100 H0 Z"/>
         </svg>
-        <svg id="bluePartOfEvaluationBar" viewBox="0 0 100 100">
-            <path stroke="none" fill="#55F" d="M0 0H10 V50 H0 Z"/>
+        <svg id="bluePartOfEvaluationBar" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path stroke="none" fill="#55F" d="M0 0H100 V100 H0 Z"/>
         </svg>
         <svg id="blueWinProbabilityText" viewBox="0 0 100 100">
             <text x="0" y="50" style="font: 24px Tahoma; fill: #FFF">50%</text>
@@ -145,7 +145,7 @@
                         redrawMovesBasedOnCurrentMap();
                         applyGamePiecePositionsToUi();
                         hideMoveAnnotation();
-                        produceComputerSuggestion();
+                        if ((game.playerTurnIndex === 0 && showSuggestionsForRed.checked) || (game.playerTurnIndex === 1 && showSuggestionsForBlue.checked)) produceComputerSuggestion();
                     }
                 }
                 if (e.keyCode === 39) {
@@ -155,7 +155,7 @@
                         redrawMovesBasedOnCurrentMap();
                         applyGamePiecePositionsToUi();
                         hideMoveAnnotation();
-                        produceComputerSuggestion();
+                        if ((game.playerTurnIndex === 0 && showSuggestionsForRed.checked) || (game.playerTurnIndex === 1 && showSuggestionsForBlue.checked)) produceComputerSuggestion();
                     }
                 }
             });
@@ -185,6 +185,11 @@
             document.body.addEventListener("touchmove", (event) => {
                 mousemove(event.touches[0]);
             });
+
+            // Position the origin div as high as possible without touching the controls
+            const bottomOfControls = controls.getBoundingClientRect().bottom;
+            originDiv.top = bottomOfControls + 2.5 * mainBoardUnitLength;
+            adjustEvaluationBarToBlueWinProbability(0.5);
 
             // Create main board
             for (let i = 0; i <= 4; i++) {
@@ -577,13 +582,13 @@
                 const moveCountAtOutset = moveCount[0];
                 if (game.isGameOver()) return;
                 setTimeout(async () => {
-                    await produceComputerSuggestionKernel(5, moveCountAtOutset);   
+                    await produceComputerSuggestionKernel(4, moveCountAtOutset);   
                     if (moveCountAtOutset !== moveCount[0]) return;
                     setTimeout(async () => {
-                        await produceComputerSuggestionKernel(6, moveCountAtOutset);
+                        await produceComputerSuggestionKernel(5, moveCountAtOutset);
                         if (moveCountAtOutset !== moveCount[0]) return;
                         setTimeout(async () => {
-                            await produceComputerSuggestionKernel(7, moveCountAtOutset);
+                            await produceComputerSuggestionKernel(6, moveCountAtOutset);
                         }, 0);
                     }, 0);
                 }, 0);
@@ -655,7 +660,8 @@
 
             function adjustEvaluationBarToBlueWinProbability(probability) {
                 console.log(`Blue win probability: ${probability}`);
-                bluePartOfEvaluationBar.querySelector("path").setAttribute("d", `M0 0H10 V${parseInt(probability * 100)} H0 Z`);               
+                // bluePartOfEvaluationBar.querySelector("path").setAttribute("d", `M0 0H10 V${parseInt(probability * 100)} H0 Z`);               
+                bluePartOfEvaluationBar.style.height = 5 * mainBoardUnitLength * probability;
                 blueWinProbabilityText.querySelector("text").innerHTML = `${parseInt(probability * 100)}%`;
             }
         </script>
