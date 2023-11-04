@@ -262,7 +262,7 @@
                                     }
                                     // Need to use k as the index in aMoves or bMoves to get the right move
                                     const reflectedK = 4 - k;
-                                    selectedMoveArrow.style.transform = `translate(${3.5 * moveDrawingSquareUnitLength}px, ${(k * 7 + 3.5) * moveDrawingSquareUnitLength}px)`;
+                                    selectedMoveArrow.style.transform = `scale(${columnIndex > 0 ? 1 : -1}, 1) translate(${(columnIndex > 0 ? 1 : -1) * ((columnIndex > 0 ? 0.5 : -8.5) * moveDrawingSquareUnitLength + 2 * (columnIndex - 1) * mainBoardUnitLength)}px, ${(8 + 7 * (rowIndex - 1 + middleOffset)) * moveDrawingSquareUnitLength}px)`;
                                     selectedMoveArrow.style.display = "block";
                                     if (reflectedK === 0) selectedMove = game.aMoves[0];
                                     if (reflectedK === 1) selectedMove = game.aMoves[1];
