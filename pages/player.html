@@ -13,9 +13,24 @@
             <input type="checkbox" id="showSuggestionsForRed"/>Computer hints for red player</br>
             <input type="checkbox" id="showSuggestionsForBlue"/>Computer hints for blue player<br/>
             <div id="userMessage"></div>
-
         </div>
-        <div id="originDiv"></div>
+        <div id="originDiv">
+            <svg id="moveSuggestionCircle" viewBox="-0.5 -0.5 5 5">
+                <circle cx="3" cy="3" r="0.4" stroke="#55F" stroke-width="0.1" opacity="0.3" />
+            </svg>
+            <svg id="moveSuggestionLine" viewBox="-0.5 -0.5 5 5">
+                <path stroke="#55F" stroke-width="0.1" opacity="0.3" d="M0 0 L3 3"/>
+            </svg>
+            <svg id="redPartOfEvaluationBar" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path stroke="none" fill="#F55" d="M0 0H100 V100 H0 Z"/>
+            </svg>
+            <svg id="bluePartOfEvaluationBar" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path stroke="none" fill="#55F" d="M0 0H100 V100 H0 Z"/>
+            </svg>
+            <svg id="blueWinProbabilityText" viewBox="0 0 100 100">
+                <text x="0" y="50" style="font: 24px Tahoma; fill: #FFF">50%</text>
+            </svg>
+        </div>
         <div id="moveDrawingDiv">
             <button id="commitMoves">Commit moves</button>
             <svg id="selectedMoveArrow" viewBox="0 0 100 100">
@@ -42,40 +57,25 @@
             </svg>
         </template>
         <template id="aPawnTemplate">
-            <svg class="aPawn">
+            <svg class="aPawn" viewBox="0 0 100 100">
                 <path stroke="#933" stroke-width="3px" fill="#F55" d="M20 20H80V80H20Z" />
             </svg>
         </template>
         <template id="bPawnTemplate">
-            <svg class="bPawn">
+            <svg class="bPawn" viewBox="0 0 100 100">
                 <path stroke="#339" stroke-width="3px" fill="#55F" d="M20 20H80V80H20Z" />
             </svg>
         </template>
         <template id="aGuruTemplate">
-            <svg class="aGuru">
+            <svg class="aGuru" viewBox="0 0 100 100">
                 <path stroke="#933" stroke-width="3px" fill="#F55" d="M50 20L20 80H80Z" />
             </svg>
         </template>
         <template id="bGuruTemplate">
-            <svg class="bGuru">
+            <svg class="bGuru" viewBox="0 0 100 100">
                 <path stroke="#339" stroke-width="3px" fill="#55F" d="M50 20L20 80H80Z" />
             </svg>
         </template>
-        <svg id="redPartOfEvaluationBar" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path stroke="none" fill="#F55" d="M0 0H100 V100 H0 Z"/>
-        </svg>
-        <svg id="bluePartOfEvaluationBar" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path stroke="none" fill="#55F" d="M0 0H100 V100 H0 Z"/>
-        </svg>
-        <svg id="blueWinProbabilityText" viewBox="0 0 100 100">
-            <text x="0" y="50" style="font: 24px Tahoma; fill: #FFF">50%</text>
-        </svg>
-        <svg id="moveSuggestionCircle" viewBox="-0.5 -0.5 5 5">
-            <circle cx="3" cy="3" r="0.4" stroke="#55F" stroke-width="0.1" opacity="0.3" />
-        </svg>
-        <svg id="moveSuggestionLine" viewBox="-0.5 -0.5 5 5">
-            <path stroke="#55F" stroke-width="0.1" opacity="0.3" d="M0 0 L3 3"/>
-        </svg>
         <script>
 
             const HOW_TO_EDIT_INSTRUCTIONS = `
@@ -101,7 +101,7 @@
             const moveSuggestionLine = document.getElementById("moveSuggestionLine");
             const moveSuggestionBox = document.getElementById("moveSuggestionBox");
             let currentMouseCoordinatesOverBoard = null;
-            let mainBoardUnitLength = 100;
+            let mainBoardUnitLength = 120;
             let moveDrawingSquareUnitLength = 35;
 
             let pieceStartingBoardCoordinates = null;
@@ -189,11 +189,12 @@
             // Position the origin div as high as possible without touching the controls
             const bottomOfControls = controls.getBoundingClientRect().bottom;
             originDiv.style.top = `${bottomOfControls + 2.5 * mainBoardUnitLength + 15}px`;
+            console.log(`originDiv top is ${originDiv.style.top}`);
             adjustEvaluationBarToBlueWinProbability(0.5);
 
             // TODO add a listener for on window resize
 
-            moveDrawingDiv.style.top = `${bottomOfControls + 5 * mainBoardUnitLength + 15}px`;
+            moveDrawingDiv.style.top = `${bottomOfControls + 6 * mainBoardUnitLength + 15}px`;
 
             // Create main board
             for (let i = 0; i <= 4; i++) {
@@ -203,7 +204,7 @@
                     const unitLength = mainBoardUnitLength;
                     mainSquare.style.transform = `translate(${(-2.5 + i) * unitLength}px, ${(-2.5 + j) * unitLength}px)`;
                     mainSquare.id = `mainSquare-${i},${j}`;
-                    document.body.insertBefore(mainSquare, moveSuggestionCircle);
+                    originDiv.insertBefore(mainSquare, moveSuggestionCircle);
                 }
             }
 
@@ -217,15 +218,18 @@
             yourMoveBox.setAttribute("width", 7 * moveDrawingSquareUnitLength);
             yourMoveBox.style.transform = `translate(${2 * mainBoardUnitLength - 3.5 * moveDrawingSquareUnitLength}px, ${-1 * moveDrawingSquareUnitLength}px)`;
             otherPlayerMoveBox.setAttribute("width", 7 * moveDrawingSquareUnitLength);
-            otherPlayerMoveBox.style.transform = `translate(${-3 * mainBoardUnitLength - 3.5 * moveDrawingSquareUnitLength}px, ${-1 * moveDrawingSquareUnitLength}px)`;
+            otherPlayerMoveBox.style.transform = `translate(${-2 * mainBoardUnitLength - 3.5 * moveDrawingSquareUnitLength}px, ${-1 * moveDrawingSquareUnitLength}px)`;
             selectedMoveArrow.setAttribute("width", 3 * moveDrawingSquareUnitLength);
             selectedMoveArrow.style.transform = `translate(${3.5 * moveDrawingSquareUnitLength}px, 0px)`;
 
             redPartOfEvaluationBar.setAttribute("height", 5 * mainBoardUnitLength);
-            redPartOfEvaluationBar.style.transform = `translate(${4 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
+            redPartOfEvaluationBar.style.transform = `translate(${3.5 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
             bluePartOfEvaluationBar.setAttribute("height", 5 * mainBoardUnitLength);
-            bluePartOfEvaluationBar.style.transform = `translate(${4 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
-            blueWinProbabilityText.style.transform = `translate(${4 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength - 20}px)`;
+            bluePartOfEvaluationBar.style.transform = `translate(${3.5 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
+            setTimeout(() => {
+                bluePartOfEvaluationBar.style.transition = `0.5s`;
+            }, 250);
+            blueWinProbabilityText.style.transform = `translate(${4 * mainBoardUnitLength - 60}px, ${-2.5 * mainBoardUnitLength - 20}px)`;
 
 
             // Create the move drawing grids
@@ -314,7 +318,7 @@
                         selectedPiece = pawn;
                         // TODO give this piece a higher z index than all other piece svgs so that it's mouseup
                         // event is the one that fires when it is released.
-                        document.body.insertBefore(pawn, moveSuggestionLine);
+                        originDiv.insertBefore(pawn, moveSuggestionLine);
                         pieceStartingBoardCoordinates = getSvgPositionAsBoardCoordinates(pawn);
                         let computedSyle = window.getComputedStyle(pawn);
                         let matrix = new WebKitCSSMatrix(computedSyle.transform);
@@ -429,7 +433,7 @@
                         e.preventDefault();
                         mouseup();
                     });
-                    document.body.insertBefore(pawn, moveSuggestionCircle);
+                    originDiv.insertBefore(pawn, moveSuggestionCircle);
                 }
             }
 
