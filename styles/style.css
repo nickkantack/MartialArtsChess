@@ -11,10 +11,10 @@ body {
 }
 .moveDrawingSquare {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 20px;
-    height: 20px;
+    left: 0%;
+    top: 0%;
+    width: 35px;
+    height: 35px;
 }
 
 .aPawn {
@@ -51,8 +51,9 @@ body {
 }
 
 #commitMoves {
-    position: absolute;
-    width: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
     padding: 2px;
 }
 #controls {
@@ -66,7 +67,7 @@ body {
 }
 #moveDrawingDiv {
     position: absolute;
-    left: 0;
+    left: 50%;
     top: 10px;
     width: 200px;
 }
@@ -87,8 +88,8 @@ body {
 #moveSuggestionBox {
     position: absolute;
     display: none;
-    left: 50%;
-    top: 50%;
+    left: 0;
+    top: 0;
     pointer-events: none;
 }
 #originDiv {
@@ -142,8 +143,8 @@ body {
 #yourMoveBox {
     position: absolute;
     display: block;
-    left: 50%;
-    top: 50%;
+    left: 0;
+    top: 0;
     pointer-events: none;
 }
 #selectedMoveArrow {
