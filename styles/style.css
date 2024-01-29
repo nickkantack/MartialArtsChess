@@ -6,8 +6,8 @@ body {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
 }
 .moveDrawingSquare {
     position: absolute;
@@ -21,30 +21,30 @@ body {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
 }
 .aGuru {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
 }
 
 .bPawn {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
 }
 .bGuru {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
 }
 .playerMoveLabels {
     font-size: 1em;
@@ -68,7 +68,7 @@ body {
 }
 #moveDrawingDiv {
     position: absolute;
-    left: 50%;
+    left: 25%;
     top: 10px;
     width: 200px;
 }
@@ -95,7 +95,8 @@ body {
 }
 #originDiv {
     position: absolute;
-    left: 50%;
+    left: 70%;
+    top: 50%;
 }
 #otherPlayerMoveBox {
     position: absolute;
@@ -108,16 +109,12 @@ body {
     position: absolute;
     display: block;
     width: 50px;
-    left: 50%;
-    top: 50%;
     pointer-events: none;
 }
 #bluePartOfEvaluationBar {
     position: absolute;
     display: block;
     width: 50px;
-    left: 50%;
-    top: 50%;
     pointer-events: none;
 }
 #blueWinProbabilityText {

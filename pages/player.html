@@ -30,6 +30,12 @@
             <svg id="blueWinProbabilityText" viewBox="0 0 100 100">
                 <text x="0" y="50" style="font: 24px Tahoma; fill: #FFF">50%</text>
             </svg>
+            <svg id="moveSuggestionCircle" viewBox="-0.5 -0.5 5 5">
+                <circle cx="3" cy="3" r="0.4" stroke="#55F" stroke-width="0.1" opacity="0.3" />
+            </svg>
+            <svg id="moveSuggestionLine" viewBox="-0.5 -0.5 5 5">
+                <path stroke="#55F" stroke-width="0.1" opacity="0.3" d="M0 0 L3 3"/>
+            </svg>
         </div>
         <div id="moveDrawingDiv">
             <button id="commitMoves">Commit moves</button>
@@ -101,7 +107,7 @@
             const moveSuggestionLine = document.getElementById("moveSuggestionLine");
             const moveSuggestionBox = document.getElementById("moveSuggestionBox");
             let currentMouseCoordinatesOverBoard = null;
-            let mainBoardUnitLength = 120;
+            let mainBoardUnitLength = 100;
             let moveDrawingSquareUnitLength = 35;
 
             let pieceStartingBoardCoordinates = null;
@@ -194,7 +200,8 @@
 
             // TODO add a listener for on window resize
 
-            moveDrawingDiv.style.top = `${bottomOfControls + 6 * mainBoardUnitLength + 15}px`;
+            // TODO set this based on screen width and change it on resize
+            moveDrawingDiv.style.top = `${bottomOfControls + 0.5 * mainBoardUnitLength + 5}px`;
 
             // Create main board
             for (let i = 0; i <= 4; i++) {
@@ -223,13 +230,10 @@
             selectedMoveArrow.style.transform = `translate(${3.5 * moveDrawingSquareUnitLength}px, 0px)`;
 
             redPartOfEvaluationBar.setAttribute("height", 5 * mainBoardUnitLength);
-            redPartOfEvaluationBar.style.transform = `translate(${3.5 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
+            redPartOfEvaluationBar.style.transform = `translate(${3 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
             bluePartOfEvaluationBar.setAttribute("height", 5 * mainBoardUnitLength);
-            bluePartOfEvaluationBar.style.transform = `translate(${3.5 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
-            setTimeout(() => {
-                bluePartOfEvaluationBar.style.transition = `0.5s`;
-            }, 250);
-            blueWinProbabilityText.style.transform = `translate(${4 * mainBoardUnitLength - 60}px, ${-2.5 * mainBoardUnitLength - 20}px)`;
+            bluePartOfEvaluationBar.style.transform = `translate(${3 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength}px)`;
+            blueWinProbabilityText.style.transform = `translate(${3 * mainBoardUnitLength}px, ${-2.5 * mainBoardUnitLength - 20}px)`;
 
 
             // Create the move drawing grids
